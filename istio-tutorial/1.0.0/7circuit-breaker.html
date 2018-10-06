@@ -410,7 +410,7 @@ istioctl create -f istiofiles/virtual-service-recommendation-v1_and_v2_50_50.yml
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v customer-tutorial.$(minishift ip).nip.io</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v __CUSTOMER__</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -444,7 +444,7 @@ istioctl get destinationrule -n tutorial</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v customer-tutorial.$(minishift ip).nip.io</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v __CUSTOMER__</code></pre>
 </div>
 </div>
 <div class="paragraph">

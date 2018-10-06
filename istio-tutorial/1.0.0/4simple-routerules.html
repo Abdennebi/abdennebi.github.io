@@ -353,62 +353,22 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>For this use case, we need to create a modified version of Recommendations</p>
+<p>This section demonstrates how to use various traffic management capabilities of Istio.</p>
+</div>
+<div class="paragraph">
+<p>We will show you how to route requests dynamically to multiple versions of a microservice.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="deployrecommendationv2"><a class="anchor" href="#deployrecommendationv2"></a>Create recommendation:v2</h2>
+<h2 id="_deploy_recommendation_v2"><a class="anchor" href="#_deploy_recommendation_v2"></a>Deploy recommendation:v2</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>We can experiment with Istio controlling traffic by making a change to <code>RecommendationVerticle.java</code> like the following and creating a "v2" docker image.</p>
-</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">private static final String RESPONSE_STRING_FORMAT = "recommendation v2 from '%s': %d\n";</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The "v2" tag during the Docker build is significant.</p>
-</div>
-<div class="paragraph">
-<p>There is also a second <code>deployment.yml</code> file to label things correctly</p>
-</div>
-<div class="sect2">
-<h3 id="_docker_build_if_you_have_access_to_docker_daemon"><a class="anchor" href="#_docker_build_if_you_have_access_to_docker_daemon"></a>Docker build (if you have access to Docker daemon)</h3>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd recommendation/java/vertx
-mvn clean package
-
-docker build -t example/recommendation:v2 .
-
-docker images | grep recommendation
-example/recommendation                  v2                  c31e399a9628        5 seconds ago       438MB
-example/recommendation                  v1                  f072978d9cf6        8 minutes ago      438MB</code></pre>
-</div>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-We have a 2nd Deployment to manage the v2 version of recommendation.
-</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/Deployment-v2.yml -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-deployment-v2 -n tutorial
 kubectl get pods -w</code></pre>
 </div>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_wait_for_v2_to_be_deployed"><a class="anchor" href="#_wait_for_v2_to_be_deployed"></a>Wait for v2 to be deployed</h3>
 <div class="paragraph">
 <p>Wait for those pods to show "2/2", the istio-proxy/envoy sidecar is part of that pod</p>
 </div>
@@ -418,11 +378,11 @@ kubectl get pods -w</code></pre>
 customer-3600192384-fpljb            2/2       Running   0          17m
 preference-243057078-8c5hz           2/2       Running   0          15m
 recommendation-v1-60483540-9snd9     2/2       Running   0          12m
-recommendation-v2-2815683430-vpx4p   2/2       Running   0         15s</code></pre>
+recommendation-v2-2815683430-vpx4p   2/2       Running   0          15s</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>and test the customer endpoint</p>
+<p>and test the customer endpoint:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -430,7 +390,10 @@ recommendation-v2-2815683430-vpx4p   2/2       Running   0         15s</code></p
 </div>
 </div>
 <div class="paragraph">
-<p>you likely see "customer =&gt; preference =&gt; recommendation v1 from '99634814-d2z2t': 3", where '99634814-d2z2t' is the pod running v1 and the 3 is basically the number of times you hit the endpoint.</p>
+<p>you likely see <code>"customer =&gt; preference =&gt; recommendation v1 from '99634814-d2z2t': 3"</code>, where '99634814-d2z2t' is the pod running <code>v1</code> and the <code>3</code> is basically the number of times you hit the endpoint.</p>
+</div>
+<div class="paragraph">
+<p>Run again the command:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -438,7 +401,7 @@ recommendation-v2-2815683430-vpx4p   2/2       Running   0         15s</code></p
 </div>
 </div>
 <div class="paragraph">
-<p>you likely see "customer =&gt; preference =&gt; recommendation v2 from '2819441432-5v22s': 1" as by default you get round-robin load-balancing when there is more than one Pod behind a Service</p>
+<p>you likely see <code>"customer =&gt; preference =&gt; recommendation v2 from '2819441432-5v22s': 1"</code> as by default you get round-robin load-balancing when there is more than one Pod behind a Service</p>
 </div>
 <div class="paragraph">
 <p>Send several requests to see their responses:</p>
@@ -471,8 +434,7 @@ customer =&gt; preference =&gt; recommendation v2 from '99634814-sf4cl': 38</cod
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl scale --replicas=2 deployment/recommendation-v2</code></pre>
-</div>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl scale --replicas=1 deployment/recommendation-v2</code></pre>
 </div>
 </div>
 </div>
@@ -491,6 +453,18 @@ customer =&gt; preference =&gt; recommendation v2 from '99634814-sf4cl': 38</cod
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/simple-routing/recommendation-destination-rule-v1-v2.yml -n tutorial</code></pre>
 </div>
 </div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+TODO PUT A PREVIEW OF THE FILE HERE
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>Verify,</p>
 </div>
@@ -508,7 +482,7 @@ recommendation          recommendation   version-v1,version-v2   tutorial    50s
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/simple-routing/recommendation-virtual-service-v2.yml -n tutorial
 
-curl customer-tutorial.$(minishift ip).nip.io</code></pre>
+curl __CUSTOMER__</code></pre>
 </div>
 </div>
 <div class="paragraph">

@@ -358,9 +358,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc whoami
-or
-kubectl config current-context</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl config current-context</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -368,12 +366,8 @@ kubectl config current-context</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc new-project tutorial
-or
-kubectl create namespace tutorial
-kubectl config set-context $(kubectl config current-context) --namespace=tutorial
-
-oc adm policy add-scc-to-user privileged -z default -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl create namespace tutorial
+kubectl config set-context $(kubectl config current-context) --namespace=tutorial</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -381,104 +375,34 @@ oc adm policy add-scc-to-user privileged -z default -n tutorial</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">git clone https://github.com/redhat-developer-demos/istio-tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">git clone https://github.com/abdennebi/istio-tutorial
 cd istio-tutorial</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>Start deploying the microservice projects, starting with customer</p>
 </div>
-<div class="paragraph">
-<p>Make sure <code>istioctl</code> is in your <code>PATH</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ istioctl version
-Version: 1.0.0
-GitRevision: 3a136c90ec5e308f236e0d7ebb5c4c5e405217f4
-User: root@71a9470ea93c
-Hub: gcr.io/istio-release
-GolangVersion: go1.10.1
-BuildStatus: Clean</code></pre>
-</div>
-</div>
 <div class="sect2">
-<h3 id="_customer_build_using_docker_daemon"><a class="anchor" href="#_customer_build_using_docker_daemon"></a>Customer build using Docker daemon</h3>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Your very first Docker build will take a bit of time as it downloads all the layers. Subsequent rebuilds of the Docker image, updating only the microservice layer will be very fast.
-</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd customer/java/springboot
-mvn clean package
-docker build -t example/customer .
-docker images | grep customer</code></pre>
-</div>
-</div>
+<h3 id="_deploy_customer"><a class="anchor" href="#_deploy_customer"></a>Deploy Customer</h3>
 <div class="paragraph">
 <p>Now let&#8217;s deploy the customer pod with its sidecar</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment.yml) -n tutorial
-oc create -f ../../kubernetes/Service.yml -n tutorial
-
-or
-
-kubectl apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment.yml) -n tutorial
-kubectl create -f ../../kubernetes/Service.yml -n tutorial</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_customer_build_using_openshift_s2i_strategy"><a class="anchor" href="#_customer_build_using_openshift_s2i_strategy"></a>Customer build using OpenShift S2I strategy</h3>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc new-app --name=customer --context-dir=customer/java/springboot -e JAEGER_SERVICE_NAME=customer JAEGER_ENDPOINT=http://jaeger-collector.istio-system.svc:14268/api/traces JAEGER_PROPAGATION=b3 JAEGER_SAMPLER_TYPE=const JAEGER_SAMPLER_PARAM=1 JAVA_OPTIONS='-Xms128m -Xmx256m -Djava.net.preferIPv4Stack=true' fabric8/s2i-java~https://github.com/redhat-developer-demos/istio-tutorial -o yaml  &gt; customer.yml
-oc apply -f &lt;(istioctl kube-inject -f customer.yml) -n tutorial
-oc delete svc/customer ; oc create -f customer/kubernetes/Service.yml
-oc logs bc/customer -f</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/customer-deployment.yml
+kubectl apply -f manifests/kubernetes/customer-service.yml</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_expose_customer"><a class="anchor" href="#_expose_customer"></a>Expose customer</h3>
 <div class="paragraph">
-<p>Since the <code>customer</code> service is the one our users will interact with, let&#8217;s add an OpenShift Route that exposes that endpoint.</p>
+<p>Since the <code>customer</code> service is the one our users will interact with, you need to make it accessible from outside of your Kubernetes cluster. An Istio <a href="https://istio.io/docs/concepts/traffic-management/#gateways">Gateway</a> is used for this purpose.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc expose service customer
-
-oc get route
-oc get pods -w
-
-or
-
-kubectl get route -o=jsonpath='{.items[0].spec.host}'
-kubectl get pods -w</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/gateway/customer-gateway.yml</code></pre>
 </div>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-If your pod fails with <code>ImagePullBackOff</code>, it&#8217;s possible that your current terminal isn&#8217;t using the proper Docker Environment. See <a href="#setup-environment">Setup environment</a>.
-</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
 <p>Wait until the status is <code>Running</code> and there are <code>2/2</code> pods in the <code>Ready</code> column. To exit, press <code>Ctrl+C</code></p>
@@ -488,7 +412,7 @@ If your pod fails with <code>ImagePullBackOff</code>, it&#8217;s possible that y
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl customer-tutorial.$(minishift ip).nip.io</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl __CUSTOMER__</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -515,14 +439,6 @@ If your pod fails with <code>ImagePullBackOff</code>, it&#8217;s possible that y
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://preference:8080": preference; nested exception is java.net.UnknownHostException: preference</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>Back to the main istio-tutorial directory</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ../../..</code></pre>
-</div>
-</div>
 </div>
 </div>
 </div>
@@ -533,29 +449,8 @@ If your pod fails with <code>ImagePullBackOff</code>, it&#8217;s possible that y
 <h3 id="_preference_build_using_docker_daemon"><a class="anchor" href="#_preference_build_using_docker_daemon"></a>Preference build using Docker daemon</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd preference/java/springboot
-mvn clean package
-docker build -t example/preference:v1 .
-docker images | grep preference
-
-oc apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment.yml) -n tutorial
-oc create -f ../../kubernetes/Service.yml
-
-or
-
-kubectl apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment.yml) -n tutorial
-kubectl create -f ../../kubernetes/Service.yml</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_preference_build_using_openshift_s2i_strategy"><a class="anchor" href="#_preference_build_using_openshift_s2i_strategy"></a>Preference build using OpenShift S2I strategy</h3>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc new-app -l app=preference,version=v1 --name=preference-v1 --context-dir=preference/java/springboot -e JAEGER_SERVICE_NAME=preference JAEGER_ENDPOINT=http://jaeger-collector.istio-system.svc:14268/api/traces JAEGER_PROPAGATION=b3 JAEGER_SAMPLER_TYPE=const JAEGER_SAMPLER_PARAM=1 JAVA_OPTIONS='-Xms128m -Xmx256m -Djava.net.preferIPv4Stack=true' fabric8/s2i-java~https://github.com/redhat-developer-demos/istio-tutorial -o yaml  &gt; preference.yml
-oc apply -f &lt;(istioctl kube-inject -f preference.yml) -n tutorial
-oc delete svc/preference-v1 ; oc create -f preference/kubernetes/Service.yml
-oc logs bc/preference-v1 -f</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/preference-deployment-v1.yml
+kubectl apply -f manifests/kubernetes/preference-service.yml</code></pre>
 </div>
 </div>
 </div>
@@ -563,9 +458,7 @@ oc logs bc/preference-v1 -f</code></pre>
 <h3 id="_wait_preference_to_be_deployed"><a class="anchor" href="#_wait_preference_to_be_deployed"></a>Wait preference to be deployed</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -w
-or
-kubectl get pods -w</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -w</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -573,7 +466,7 @@ kubectl get pods -w</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl customer-tutorial.$(minishift ip).nip.io</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl __CUSTOMER__</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -612,14 +505,6 @@ We could make this a bit more resilient in a future iteration of this tutorial
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://recommendation:8080": recommendation; nested exception is java.net.UnknownHostException: recommendation</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>Back to the main istio-tutorial directory</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ../../..</code></pre>
-</div>
-</div>
 </div>
 </div>
 </div>
@@ -638,36 +523,10 @@ The tag <code>v1</code> at the end of the image name matters. We will be creatin
 </tr>
 </table>
 </div>
-<div class="sect2">
-<h3 id="_recommendation_build_using_docker_daemon"><a class="anchor" href="#_recommendation_build_using_docker_daemon"></a>Recommendation build using Docker daemon</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd recommendation/java/vertx
-mvn clean package
-docker build -t example/recommendation:v1 .
-docker images | grep recommendation
-
-oc apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment.yml) -n tutorial
-oc create -f ../../kubernetes/Service.yml
-oc get pods -w
-
-or
-
-kubectl apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment.yml) -n tutorial
-kubectl create -f ../../kubernetes/Service.yml
-kubectl get pods -w</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_recommendation_build_using_openshift_s2i_strategy"><a class="anchor" href="#_recommendation_build_using_openshift_s2i_strategy"></a>Recommendation build using OpenShift S2I strategy</h3>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc new-app -l app=recommendation,version=v1 --name=recommendation-v1 --context-dir=recommendation/java/vertx JAVA_OPTIONS='-Xms128m -Xmx256m -Djava.net.preferIPv4Stack=true' fabric8/s2i-java~https://github.com/redhat-developer-demos/istio-tutorial -o yaml  &gt; recommendation.yml
-oc apply -f &lt;(istioctl kube-inject -f recommendation.yml) -n tutorial
-oc delete svc/recommendation-v1 ; oc create -f recommendation/kubernetes/Service.yml
-oc logs bc/recommendation-v1 -f</code></pre>
-</div>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-deployment-v1.yml
+kubectl apply -f manifests/kubernetes/recommendation-service.yml</code></pre>
 </div>
 </div>
 <div class="sect2">
@@ -677,7 +536,7 @@ oc logs bc/recommendation-v1 -f</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl customer-tutorial.$(minishift ip).nip.io</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl __CUSTOMER__</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -695,61 +554,6 @@ oc logs bc/recommendation-v1 -f</code></pre>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">stern recommendation -c recommendation</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>Back to the main <code>istio-tutorial</code> directory</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd ../../..</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="redeployingcode"><a class="anchor" href="#redeployingcode"></a>Updating Redeploying Code</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>When you wish to change code (e.g. editing the .java files) and wish to "redeploy", simply:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd {servicename}/java/{springboot|vertx}
-
-vi src/main/java/com/redhat/developer/demos/{servicename}/{Servicename}{Controller|Verticle}.java</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Make your changes, save it and then:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn clean package
-docker build -t example/{servicename}:v1 .
-
-oc get pods -o jsonpath='{.items[*].metadata.name}' -l app={servicename}
-oc get pods -o jsonpath='{.items[*].metadata.name}' -l app={servicename},version=v1
-oc delete pod -l app={servicename},version=v1
-
-or
-
-kubectl get pods -o jsonpath='{.items[*].metadata.name}' -l app={servicename}
-kubectl get pods -o jsonpath='{.items[*].metadata.name}' -l app={servicename},version=v1
-kubectl delete pod -l app={servicename},version=v1</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Why the delete pod?</p>
-</div>
-<div class="paragraph">
-<p>Based on the Deployment configuration, Kubernetes/OpenShift will recreate the pod, based on the new docker image as it attempts to keep the desired replicas available</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc describe deployment {servicename} | grep Replicas
-or
-kubectl describe deployment {servicename} | grep Replicas</code></pre>
 </div>
 </div>
 </div>

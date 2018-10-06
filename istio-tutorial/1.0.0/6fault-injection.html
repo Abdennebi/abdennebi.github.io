@@ -403,11 +403,11 @@ recommendation-v2-2815683430-vn77w   2/2       Running   0          3h</code></p
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/destination-rule-recommendation.yml -n tutorial
 istioctl create -f istiofiles/virtual-service-recommendation-503.yml -n tutorial
 
-curl customer-tutorial.$(minishift ip).nip.io
+curl __CUSTOMER__
 customer =&gt; preference =&gt; recommendation v1 from '99634814-sf4cl': 88
-curl customer-tutorial.$(minishift ip).nip.io
+curl __CUSTOMER__
 customer =&gt; 503 preference =&gt; 503 fault filter abort
-curl customer-tutorial.$(minishift ip).nip.io
+curl __CUSTOMER__
 customer =&gt; preference =&gt; recommendation v2 from '2819441432-qsp25': 51</code></pre>
 </div>
 </div>
@@ -675,11 +675,11 @@ cd ../../..</code></pre>
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh
 
 customer =&gt; 503 preference =&gt; 504 upstream request timeout
-curl customer-tutorial.$(minishift ip).nip.io  0.01s user 0.00s system 0% cpu 1.035 total
+curl __CUSTOMER__  0.01s user 0.00s system 0% cpu 1.035 total
 customer =&gt; preference =&gt; recommendation v1 from '2039379827-h58vw': 210
-curl customer-tutorial.$(minishift ip).nip.io  0.01s user 0.00s system 36% cpu 0.025 total
+curl __CUSTOMER__  0.01s user 0.00s system 36% cpu 0.025 total
 customer =&gt; 503 preference =&gt; 504 upstream request timeout
-curl customer-tutorial.$(minishift ip).nip.io  0.01s user 0.00s system 0% cpu 1.034 total</code></pre>
+curl __CUSTOMER__  0.01s user 0.00s system 0% cpu 1.034 total</code></pre>
 </div>
 </div>
 <div class="paragraph">
