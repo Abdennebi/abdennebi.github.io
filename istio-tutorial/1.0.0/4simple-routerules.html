@@ -346,7 +346,7 @@
     <li class="crumb"><a href="4simple-routerules.html">4. Simple Routing</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="https://github.com/Abdennebi/istio-tutorial/edit/master/documentation/modules/ROOT/pages/4simple-routerules.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="file:///f/repo/external/github.com/redhat-developer-demos/istio-tutorial/documentation/modules/ROOT/pages/4simple-routerules.adoc">Edit this Page</a></div>
 </div>
 <article class="doc">
 <h1>Simple Route Rules</h1>
@@ -365,7 +365,7 @@
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-deployment-v2 -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-deployment-v2.yml
 kubectl get pods -w</code></pre>
 </div>
 </div>
@@ -443,44 +443,75 @@ customer =&gt; preference =&gt; recommendation v2 from '99634814-sf4cl': 38</cod
 <h2 id="istiorouting"><a class="anchor" href="#istiorouting"></a>Changing Istio Routings</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>First, we will create a <a href="https://istio.io/docs/reference/config/istio.networking.v1alpha3/#DestinationRule">DestinationRule</a> to specify a policy that defines subsets to be used by a <a href="https://istio.io/docs/reference/config/istio.networking.v1alpha3/#VirtualService">VirtualService</a> to override the settings specified at the service level.</p>
-</div>
-<div class="paragraph">
-<p>From the main istio-tutorial directory,</p>
+<p>Before you can use Istio to control version routing, you need to define the available versions, called <em>subsets</em>, in <a href="https://istio.io/docs/reference/config/istio.networking.v1alpha3/#DestinationRule">DestinationRule</a>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/simple-routing/recommendation-destination-rule-v1-v2.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">kind: DestinationRule
+metadata:
+  name: recommendation
+spec:
+  host: recommendation
+  subsets:
+  - name: version-v1
+    labels:
+      version: v1
+  - name: version-v2
+    labels:
+      version: v2</code></pre>
 </div>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-TODO PUT A PREVIEW OF THE FILE HERE
-</td>
-</tr>
-</table>
 </div>
 <div class="paragraph">
-<p>Verify,</p>
+<p>Run the following command to create default destination rules to send traffic to versions <code>v1</code> and <code>v2</code> of recommandation service.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl get destinationrules recommendation
-
-DESTINATION-RULE NAME   HOST             SUBSETS                 NAMESPACE   AGE
-recommendation          recommendation   version-v1,version-v2   tutorial    50s</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-destination-rule-v1-v2.yml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait a few seconds for the destination rules to propagate.</p>
+</div>
+<div class="paragraph">
+<p>You can display the created destination rule with the following command:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get destinationrules recommendation -o yaml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To display all destination rules :</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get destinationrules -o yaml</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="alltorecommendationv2"><a class="anchor" href="#alltorecommendationv2"></a>All users to recommendation:v2</h3>
+<h3 id="alltorecommendationv2"><a class="anchor" href="#alltorecommendationv2"></a>Route all the traffic to recommendation:v2</h3>
+<div class="paragraph">
+<p>To route to one version only, you apply virtual services that set the default version for the microservices. In this case, the virtual services will route all traffic to v2 of recommendation microservice.</p>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/simple-routing/recommendation-virtual-service-v2.yml -n tutorial
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">kind: VirtualService
+metadata:
+  name: recommendation
+spec:
+  hosts:
+  - recommendation
+  http:
+  - route:
+    - destination:
+        host: recommendation
+        subset: version-v2
+      weight: 100</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-virtual-service-v2.yml
 
 curl __CUSTOMER__</code></pre>
 </div>
@@ -490,17 +521,12 @@ curl __CUSTOMER__</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="alltorecommendationv1"><a class="anchor" href="#alltorecommendationv1"></a>All users to recommendation:v1</h3>
-<div class="paragraph">
-<p>Note: "replace" instead of "create" since we are overlaying the previous rule</p>
-</div>
+<h3 id="alltorecommendationv1"><a class="anchor" href="#alltorecommendationv1"></a>Route all the traffic to recommendation:v1</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f istiofiles/virtual-service-recommendation-v1.yml -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-virtual-service-v1.yml
 
-istioctl get virtualservice
-
-istioctl get virtualservice -o yaml -n tutorial</code></pre>
+curl __CUSTOMER__</code></pre>
 </div>
 </div>
 </div>
@@ -511,7 +537,11 @@ istioctl get virtualservice -o yaml -n tutorial</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/recommendation-virtual-service-v1.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/routing-simple/recommendation-virtual-service-v1.yml
+
+or
+
+kubectl get virtualservice recommendation</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -530,7 +560,7 @@ istioctl get virtualservice -o yaml -n tutorial</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -l app=recommendation -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -l app=recommendation
 
 NAME                                  READY     STATUS    RESTARTS   AGE
 recommendation-v1-3719512284-7mlzw   2/2       Running   6          2h
@@ -542,7 +572,7 @@ recommendation-v2-2815683430-vn77w   2/2       Running   0          1h</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/simple-routing/recommendation-virtual-service-v1_and_v2.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-virtual-service-v1_and_v2.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -550,7 +580,7 @@ recommendation-v2-2815683430-vn77w   2/2       Running   0          1h</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl __CUSTOMER__; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -566,16 +596,9 @@ recommendation-v2-2815683430-vn77w   2/2       Running   0          1h</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/virtual-service-recommendation-v1_and_v2_75_25.yml -n tutorial
-istioctl delete -f istiofiles/destination-rule-recommendation-v1-v2.yml -n tutorial</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>or you can run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete virtualservice recommendation
+
+kubectl delete destinationrule recommendation</code></pre>
 </div>
 </div>
 </div>
