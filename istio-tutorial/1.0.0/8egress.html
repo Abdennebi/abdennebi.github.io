@@ -119,10 +119,10 @@
     <a class="nav-link" href="4simple-routerules.html#istiorouting">Changing Istio Routings</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="4simple-routerules.html#alltorecommendationv2">All Users To Recommendation V2</a>
+    <a class="nav-link" href="4simple-routerules.html#routeallthetraffictorecommendationv2">Route all the traffic to recommendation:v2</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="4simple-routerules.html#alltorecommendationv1">All Users To Recommendation V1</a>
+    <a class="nav-link" href="4simple-routerules.html#routeallthetraffictorecommendationv1">Route all the traffic to recommendation:v1</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="4simple-routerules.html#alltorecommendationv1v2">All Users To Recommendation V1 and V2</a>
@@ -499,8 +499,8 @@ recommendation-v3-7b445dd469-j6rkg   2/2       Running   0          2m</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/destination-rule-recommendation-v1-v2-v3.yml -n tutorial
-istioctl create -f istiofiles/virtual-service-recommendation-v3.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/destination-rule-recommendation-v1-v2-v3.yml -n tutorial
+istioctl apply -f manifests/istio/virtual-service-recommendation-v3.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -521,7 +521,7 @@ Since no Egress service entry has been registered to access an external site, th
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl -m 5 $CUTOMER_URL
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl -m 5 $CUSTOMER_URL
 curl: (28) Operation timed out after 5000 milliseconds with 0 bytes received</code></pre>
 </div>
 </div>
@@ -530,11 +530,11 @@ curl: (28) Operation timed out after 5000 milliseconds with 0 bytes received</co
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/service-entry-egress-httpbin.yml -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/service-entry-egress-httpbin.yml -n tutorial
 
 istioctl get serviceentry
 
-curl $CUTOMER_URL
+curl $CUSTOMER_URL
 customer =&gt; preference =&gt; Mon, 16 Jul 2018 12:03:38 GMT recommendation v3 from '7b445dd469-j6rkg': 1</code></pre>
 </div>
 </div>
@@ -558,9 +558,9 @@ exit</code></pre>
 <h3 id="_clean_up"><a class="anchor" href="#_clean_up"></a>Clean up</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/service-entry-egress-httpbin.yml -n tutorial
-istioctl delete -f istiofiles/destination-rule-recommendation-v1-v2-v3.yml -n tutorial
-istioctl delete -f istiofiles/virtual-service-recommendation-v3.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f manifests/istio/service-entry-egress-httpbin.yml -n tutorial
+istioctl delete -f manifests/istio/destination-rule-recommendation-v1-v2-v3.yml -n tutorial
+istioctl delete -f manifests/istio/virtual-service-recommendation-v3.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">

@@ -119,10 +119,10 @@
     <a class="nav-link" href="4simple-routerules.html#istiorouting">Changing Istio Routings</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="4simple-routerules.html#alltorecommendationv2">All Users To Recommendation V2</a>
+    <a class="nav-link" href="4simple-routerules.html#routeallthetraffictorecommendationv2">Route all the traffic to recommendation:v2</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="4simple-routerules.html#alltorecommendationv1">All Users To Recommendation V1</a>
+    <a class="nav-link" href="4simple-routerules.html#routeallthetraffictorecommendationv1">Route all the traffic to recommendation:v1</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="4simple-routerules.html#alltorecommendationv1v2">All Users To Recommendation V1 and V2</a>
@@ -399,8 +399,8 @@ if so run:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/destination-rule-recommendation-v1-v2.yml -n tutorial
-istioctl create -f istiofiles/virtual-service-recommendation-v1_and_v2_50_50.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/destination-rule-recommendation-v1-v2.yml -n tutorial
+istioctl apply -f manifests/istio/virtual-service-recommendation-v1_and_v2_50_50.yml -n tutorial</code></pre>
 </div>
 </div>
 <div class="sect2">
@@ -410,7 +410,7 @@ istioctl create -f istiofiles/virtual-service-recommendation-v1_and_v2_50_50.yml
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -427,7 +427,7 @@ istioctl create -f istiofiles/virtual-service-recommendation-v1_and_v2_50_50.yml
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f istiofiles/destination-rule-recommendation_cb_policy_version_v2.yml -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f manifests/istio/destination-rule-recommendation_cb_policy_version_v2.yml -n tutorial
 
 istioctl get destinationrule -n tutorial</code></pre>
 </div>
@@ -444,7 +444,7 @@ istioctl get destinationrule -n tutorial</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -459,7 +459,7 @@ istioctl get destinationrule -n tutorial</code></pre>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete virtualservice recommendation -n tutorial
-istioctl delete -f istiofiles/destination-rule-recommendation_cb_policy_version_v2.yml -n tutorial</code></pre>
+istioctl delete -f manifests/istio/destination-rule-recommendation_cb_policy_version_v2.yml -n tutorial</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -484,8 +484,8 @@ istioctl delete -f istiofiles/destination-rule-recommendation_cb_policy_version_
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/destination-rule-recommendation-v1-v2.yml -n tutorial
-istioctl create -f istiofiles/virtual-service-recommendation-v1_and_v2_50_50.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/destination-rule-recommendation-v1-v2.yml -n tutorial
+istioctl apply -f manifests/istio/virtual-service-recommendation-v1_and_v2_50_50.yml -n tutorial</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -512,7 +512,7 @@ kubectl get pods -w</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -591,7 +591,7 @@ exit</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -625,7 +625,7 @@ customer =&gt; 503 preference =&gt; 503 recommendation misbehavior from '2036617
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f istiofiles/destination-rule-recommendation_cb_policy_pool_ejection.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f manifests/istio/destination-rule-recommendation_cb_policy_pool_ejection.yml -n tutorial</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -633,7 +633,7 @@ customer =&gt; 503 preference =&gt; 503 recommendation misbehavior from '2036617
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -699,7 +699,7 @@ customer =&gt; preference =&gt; recommendation v2 from '2036617847-hdjv2': 270</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f istiofiles/virtual-service-recommendation-v1_and_v2_retry.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f manifests/istio/virtual-service-recommendation-v1_and_v2_retry.yml -n tutorial</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -707,7 +707,7 @@ customer =&gt; preference =&gt; recommendation v2 from '2036617847-hdjv2': 270</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">

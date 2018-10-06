@@ -119,10 +119,10 @@
     <a class="nav-link" href="../4simple-routerules.html#istiorouting">Changing Istio Routings</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../4simple-routerules.html#alltorecommendationv2">All Users To Recommendation V2</a>
+    <a class="nav-link" href="../4simple-routerules.html#routeallthetraffictorecommendationv2">Route all the traffic to recommendation:v2</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../4simple-routerules.html#alltorecommendationv1">All Users To Recommendation V1</a>
+    <a class="nav-link" href="../4simple-routerules.html#routeallthetraffictorecommendationv1">Route all the traffic to recommendation:v1</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../4simple-routerules.html#alltorecommendationv1v2">All Users To Recommendation V1 and V2</a>
@@ -398,7 +398,7 @@ For this reason, let&#8217;s create a <code>Gateway</code> and <code>VirtualServ
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/gateway-customer.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/gateway-customer.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -438,8 +438,8 @@ customer =&gt; preference =&gt; recommendation v1 from 'b87789c58-mfrhr': 2</cod
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/authentication-enable-tls.yml <i class="conum" data-value="1"></i><b>(1)</b>
-istioctl create -f istiofiles/destination-rule-tls.yml <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/authentication-enable-tls.yml <i class="conum" data-value="1"></i><b>(1)</b>
+istioctl apply -f manifests/istio/destination-rule-tls.yml <i class="conum" data-value="2"></i><b>(2)</b></code></pre>
 </div>
 </div>
 <div class="colist arabic">
@@ -561,8 +561,8 @@ E....B@.@._........
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/authentication-enable-tls.yml
-istioctl delete -f istiofiles/destination-rule-tls.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f manifests/istio/authentication-enable-tls.yml
+istioctl delete -f manifests/istio/destination-rule-tls.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -605,7 +605,7 @@ x-b3-sampled: 1</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>istioctl delete -f istiofiles/gateway-customer.yml</pre>
+<pre>istioctl delete -f manifests/istio/gateway-customer.yml</pre>
 </div>
 </div>
 <div class="paragraph">

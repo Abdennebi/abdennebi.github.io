@@ -119,10 +119,10 @@
     <a class="nav-link" href="../4simple-routerules.html#istiorouting">Changing Istio Routings</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../4simple-routerules.html#alltorecommendationv2">All Users To Recommendation V2</a>
+    <a class="nav-link" href="../4simple-routerules.html#routeallthetraffictorecommendationv2">Route all the traffic to recommendation:v2</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="../4simple-routerules.html#alltorecommendationv1">All Users To Recommendation V1</a>
+    <a class="nav-link" href="../4simple-routerules.html#routeallthetraffictorecommendationv1">Route all the traffic to recommendation:v1</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="../4simple-routerules.html#alltorecommendationv1v2">All Users To Recommendation V1 and V2</a>
@@ -475,7 +475,7 @@ recommendation-v2-1275713543-2bs5k            2/2       Running   4          2d<
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -486,7 +486,7 @@ recommendation-v2-1275713543-2bs5k            2/2       Running   4          2d<
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -544,7 +544,7 @@ recommendation-virtualized-2649197284-rp9cg   2/2       Running   2          3h<
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -571,8 +571,8 @@ Let&#8217;s avoid this by just sending traffic that comes from preference v2 ser
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/destination-rule-recommendation-v1.yml -n tutorial
-istioctl create -f istiofiles/virtual-service-recommendation-virtualized.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/destination-rule-recommendation-v1.yml -n tutorial
+istioctl apply -f manifests/istio/virtual-service-recommendation-virtualized.yml -n tutorial</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -597,8 +597,8 @@ In this way when you deploy a new service, you can mirror the traffic without wo
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/destination-rule-recommendation-v1.yml -n tutorial
-istioctl delete -f istiofiles/virtual-service-recommendation-virtualized.yml -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f manifests/istio/destination-rule-recommendation-v1.yml -n tutorial
+istioctl delete -f manifests/istio/virtual-service-recommendation-virtualized.yml -n tutorial
 oc delete all  -l app=preference,version=v2
 oc delete all  -l app=recommendation,version=virtualized</code></pre>
 </div>

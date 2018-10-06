@@ -119,10 +119,10 @@
     <a class="nav-link" href="#istiorouting">Changing Istio Routings</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="#alltorecommendationv2">All Users To Recommendation V2</a>
+    <a class="nav-link" href="#routeallthetraffictorecommendationv2">Route all the traffic to recommendation:v2</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="#alltorecommendationv1">All Users To Recommendation V1</a>
+    <a class="nav-link" href="#routeallthetraffictorecommendationv1">Route all the traffic to recommendation:v1</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="#alltorecommendationv1v2">All Users To Recommendation V1 and V2</a>
@@ -365,7 +365,7 @@
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-deployment-v2.yml
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-v2.yml
 kubectl get pods -w</code></pre>
 </div>
 </div>
@@ -386,7 +386,7 @@ recommendation-v2-2815683430-vpx4p   2/2       Running   0          15s</code></
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -397,7 +397,7 @@ recommendation-v2-2815683430-vpx4p   2/2       Running   0          15s</code></
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code>curl $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code>curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -408,7 +408,7 @@ recommendation-v2-2815683430-vpx4p   2/2       Running   0          15s</code></
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -513,7 +513,7 @@ spec:
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-virtual-service-v2.yml
 
-curl $CUTOMER_URL</code></pre>
+curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -526,12 +526,12 @@ curl $CUTOMER_URL</code></pre>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-virtual-service-v1.yml
 
-curl $CUTOMER_URL</code></pre>
+curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="alltorecommendationv1v2"><a class="anchor" href="#alltorecommendationv1v2"></a>All users to recommendation v1 and v2</h3>
+<h3 id="alltorecommendationv1v2"><a class="anchor" href="#alltorecommendationv1v2"></a>Route the traffic to both versions of recommendation: v1 and v2</h3>
 <div class="paragraph">
 <p>By simply removing the virtual service</p>
 </div>
@@ -545,7 +545,7 @@ curl $CUTOMER_URL</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 </div>
@@ -576,7 +576,7 @@ recommendation-v2-2815683430-vn77w   2/2       Running   0          1h</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUTOMER_URL; sleep .5; done</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -584,7 +584,7 @@ recommendation-v2-2815683430-vn77w   2/2       Running   0          1h</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/simple-routing/recommendation-virtual-service-v1_and_v2_75_25.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-virtual-service-v1_and_v2_75_25.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">

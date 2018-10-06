@@ -119,10 +119,10 @@
     <a class="nav-link" href="4simple-routerules.html#istiorouting">Changing Istio Routings</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="4simple-routerules.html#alltorecommendationv2">All Users To Recommendation V2</a>
+    <a class="nav-link" href="4simple-routerules.html#routeallthetraffictorecommendationv2">Route all the traffic to recommendation:v2</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="4simple-routerules.html#alltorecommendationv1">All Users To Recommendation V1</a>
+    <a class="nav-link" href="4simple-routerules.html#routeallthetraffictorecommendationv1">Route all the traffic to recommendation:v1</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="4simple-routerules.html#alltorecommendationv1v2">All Users To Recommendation V1 and V2</a>
@@ -361,12 +361,12 @@
 <td class="content">
 <div class="title">Before Start</div>
 <div class="paragraph">
-<p>You should have NO virtualservice nor destinationrule (in <code>tutorial</code> namespace) <code>istioctl get virtualservice</code> <code>istioctl get destinationrule</code>
-if so run:</p>
+<p>You should have NO virtualservice nor destinationrule (in <code>tutorial</code> namespace) if so run:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete virtualservices --all
+kubectl delete destinationrules --all</code></pre>
 </div>
 </div>
 </td>
@@ -379,12 +379,6 @@ if so run:</p>
 <h2 id="canarydeploymentuseragent"><a class="anchor" href="#canarydeploymentuseragent"></a>Smart routing based on user-agent header (Canary Deployment)</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>What is your user-agent?</p>
-</div>
-<div class="paragraph">
-<p><a href="https://www.whoishostingthis.com/tools/user-agent/">https://www.whoishostingthis.com/tools/user-agent/</a></p>
-</div>
-<div class="paragraph">
 <p>Note: the "user-agent" header is added to OpenTracing baggage in the Customer service. From
 there it is automatically propagated to all downstream services. To enable automatic
 baggage propagation all intermediate services have to be instrumented with OpenTracing.
@@ -394,8 +388,8 @@ The baggage header for user agent has following form <code>baggage-user-agent: &
 <h3 id="alltorecommendationv1"><a class="anchor" href="#alltorecommendationv1"></a>Set recommendation to all v1</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/destination-rule-recommendation-v1-v2.yml -n tutorial
-istioctl create -f istiofiles/virtual-service-recommendation-v1.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-destination-rule-v1-v2.yml
+kubectl apply -f manifests/istio/routing-simple/recommendation-virtual-service-v1.yml</code></pre>
 </div>
 </div>
 </div>
@@ -403,9 +397,7 @@ istioctl create -f istiofiles/virtual-service-recommendation-v1.yml -n tutorial<
 <h3 id="safaritov2"><a class="anchor" href="#safaritov2"></a>Set Safari users to v2</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f istiofiles/virtual-service-safari-recommendation-v2.yml -n tutorial
-
-istioctl get virtualservice -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-advanced/canary-deployment/recommendation-v2-safari-virtual-service.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -415,35 +407,12 @@ istioctl get virtualservice -n tutorial</code></pre>
 <p>and test with a Firefox browser, it should only see v1 responses from recommendation.</p>
 </div>
 <div class="paragraph">
-<p>There are two ways to get the URL for your browser:</p>
+<p>Alternatively, you can also attempt to use the curl -A command to test with different user-agent strings.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">minishift openshift service customer --in-browser</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>That will open the openshift service <code>customer</code> in browser</p>
-</div>
-<div class="paragraph">
-<p>Or</p>
-</div>
-<div class="paragraph">
-<p>if you need just the url alone:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">minishift openshift service customer --url
-http://customer-tutorial.192.168.99.102.nip.io</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>You can also attempt to use the curl -A command to test with different user-agent strings.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -A Safari $CUTOMER_URL
-curl -A Firefox $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl -A Safari $CUSTOMER_URL
+curl -A Firefox $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -451,14 +420,14 @@ curl -A Firefox $CUTOMER_URL</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl get virtualservice -o yaml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get virtualservice -o yaml -n tutorial</code></pre>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_remove_the_safari_rule"><a class="anchor" href="#_remove_the_safari_rule"></a>Remove the Safari rule</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/virtual-service-safari-recommendation-v2.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/routing-advanced/canary-deployment/recommendation-v2-safari-virtual-service.yml</code></pre>
 </div>
 </div>
 </div>
@@ -467,25 +436,17 @@ curl -A Firefox $CUTOMER_URL</code></pre>
 <h3 id="mobiletov2"><a class="anchor" href="#mobiletov2"></a>Set mobile users to v2</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/virtual-service-mobile-recommendation-v2.yml -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f -f manifests/istio/routing-advanced/canary-deployment/recommendation-v2-mobile-virtual-service.yml
 
-curl -A "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4(KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5" $CUTOMER_URL</code></pre>
+curl -A "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4(KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5" $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_clean_up"><a class="anchor" href="#_clean_up"></a>Clean up</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/destination-rule-recommendation-v1-v2.yml -n tutorial
-istioctl delete -f istiofiles/virtual-service-mobile-recommendation-v2.yml -n tutorial</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>or you can run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/routing-simple/recommendation-destination-rule-v1-v2.yml
+kubectl delete -f manifests/istio/routing-simple/recommendation-virtual-service-v1.yml</code></pre>
 </div>
 </div>
 </div>
@@ -497,46 +458,37 @@ istioctl delete -f istiofiles/virtual-service-mobile-recommendation-v2.yml -n tu
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -l app=recommendation -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -l app=recommendation</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p>You should have 2 pods for recommendation based on the steps above</p>
 </div>
+<div class="paragraph">
+<p>You should have NO virtualservice nor destinationrule (in <code>tutorial</code> namespace) if so run:</p>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl get virtualservice -n tutorial
-istioctl get destinationrule</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get virtualservice recommendation
+kubectl get destinationrule recommendation</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>You should have NO virtualservice nor destinationrule (in <code>tutorial</code> namespace) <code>istioctl get virtualservice</code> <code>istioctl get destinationrule</code>
-if so run:</p>
+<p>In a new terminal, check the logs of recommendation-v2</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl logs -f `kubectl get pods|grep recommendation-v2|awk '{ print $1 }'` -c recommendation</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Make sure you are in the main directory of "istio-tutorial"</p>
+<p>and see what happens when you run</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/destination-rule-recommendation-v1-v2.yml -n tutorial
-istioctl create -f istiofiles/virtual-service-recommendation-v1-mirror-v2.yml -n tutorial
-
-curl $CUTOMER_URL</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Check the logs of recommendation-v2</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc logs -f `oc get pods|grep recommendation-v2|awk '{ print $1 }'` -c recommendation
-or
-kubectl logs -f `oc get pods|grep recommendation-v2|awk '{ print $1 }'` -c recommendation</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-destination-rule-v1-v2.yml
+kubectl apply -f manifests/istio/routing-advanced/dark-launch/recommendation-v1-mirror-v2-virtual-service.yml
+curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -544,16 +496,8 @@ kubectl logs -f `oc get pods|grep recommendation-v2|awk '{ print $1 }'` -c recom
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/destination-rule-recommendation-v1-v2.yml -n tutorial
-istioctl delete -f istiofiles/virtual-service-recommendation-v1-mirror-v2.yml -n tutorial</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>or you can run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f -f manifests/istio/routing-simple/recommendation-destination-rule-v1-v2.yml
+kubectl delete -f manifests/istio/routing-advanced/dark-launch/recommendation-v1-mirror-v2-virtual-service.yml</code></pre>
 </div>
 </div>
 </div>
@@ -580,12 +524,12 @@ The Access Control rules take some time to be applied and reflected. Be patient 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/acl-whitelist.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-advanced/access-control/acl-whitelist.yml</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL
 customer =&gt; 404 NOT_FOUND:preferencewhitelist.listchecker.tutorial:customer is not whitelisted</code></pre>
 </div>
 </div>
@@ -593,7 +537,7 @@ customer =&gt; 404 NOT_FOUND:preferencewhitelist.listchecker.tutorial:customer i
 <h4 id="_clean_up_2"><a class="anchor" href="#_clean_up_2"></a>Clean up</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/acl-whitelist.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/routing-advanced/access-control/acl-whitelist.yml</code></pre>
 </div>
 </div>
 </div>
@@ -605,12 +549,12 @@ customer =&gt; 404 NOT_FOUND:preferencewhitelist.listchecker.tutorial:customer i
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/acl-blacklist.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-advanced/access-control/acl-blacklist.yml</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL
 customer =&gt; 403 PERMISSION_DENIED:denycustomerhandler.denier.tutorial:Not allowed</code></pre>
 </div>
 </div>
@@ -618,7 +562,7 @@ customer =&gt; 403 PERMISSION_DENIED:denycustomerhandler.denier.tutorial:Not all
 <h4 id="_clean_up_3"><a class="anchor" href="#_clean_up_3"></a>Clean up</h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/acl-blacklist.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/routing-advanced/access-control/acl-blacklist.yml</code></pre>
 </div>
 </div>
 </div>
@@ -636,18 +580,15 @@ customer =&gt; 403 PERMISSION_DENIED:denycustomerhandler.denier.tutorial:Not all
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc scale deployment recommendation-v2 --replicas=2 -n tutorial
-or
-kubectl scale deployment recommendation-v2 --replicas=2 -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl scale deployment recommendation-v2 --replicas=2</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Wait a bit (oc get pods -w to watch)
-and curl the customer endpoint many times</p>
+<p>Wait a bit and curl the customer endpoint many times</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -655,22 +596,15 @@ and curl the customer endpoint many times</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc scale deployment recommendation-v2 --replicas=3 -n tutorial
-$ oc get pods -n tutorial
-
-or
-
-$ kubectl scale deployment recommendation-v2 --replicas=3 -n tutorial
-$ kubectl get pods -n tutorial
-
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl scale deployment recommendation-v2 --replicas=3
 
 NAME                                  READY     STATUS    RESTARTS   AGE
 customer-1755156816-cjd2z             2/2       Running   0          1h
-preference-3336288630-2cc6f          2/2       Running   0          1h
-recommendation-v1-3719512284-bn42p   2/2       Running   0          59m
-recommendation-v2-2815683430-97nnf   2/2       Running   0          43m
-recommendation-v2-2815683430-d49n6   2/2       Running   0          51m
-recommendation-v2-2815683430-tptf2   2/2       Running   0          33m</code></pre>
+preference-3336288630-2cc6f           2/2       Running   0          1h
+recommendation-v1-3719512284-bn42p    2/2       Running   0          59m
+recommendation-v2-2815683430-97nnf    2/2       Running   0          43m
+recommendation-v2-2815683430-d49n6    2/2       Running   0          51m
+recommendation-v2-2815683430-tptf2    2/2       Running   0          33m</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -678,7 +612,7 @@ recommendation-v2-2815683430-tptf2   2/2       Running   0          33m</code></
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -701,7 +635,7 @@ customer =&gt; preference =&gt; recommendation v2 from '2819441432-bs5ck': 182</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/destination-rule-recommendation_lb_policy_app.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-advanced/load-balancer/recommendation-destination-rule-lb_policy_random.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -727,11 +661,9 @@ customer =&gt; preference =&gt; recommendation v2 from '2819441432-rg45q': 14</c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/destination-rule-recommendation_lb_policy_app.yml -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/routing-advanced/load-balancer/recommendation-destination-rule-lb_policy_random.yml
 
-oc scale deployment recommendation-v2 --replicas=1 -n tutorial
-or
-kubectl scale deployment recommendation-v2 --replicas=1 -n tutorial</code></pre>
+kubectl scale deployment recommendation-v2 --replicas=1</code></pre>
 </div>
 </div>
 </div>
@@ -759,7 +691,7 @@ The Rate Limiting rules take some time to be applied and reflected. Be patient h
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/recommendation_rate_limit_handler.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-advanced/rate-limiting/recommendation_rate_limit_handler.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -767,7 +699,7 @@ The Rate Limiting rules take some time to be applied and reflected. Be patient h
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl create -f istiofiles/rate_limit_rule.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-advanced/rate-limiting/rate_limit_rule.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -775,7 +707,7 @@ The Rate Limiting rules take some time to be applied and reflected. Be patient h
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/run.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -805,17 +737,9 @@ customer =&gt; preference =&gt; recommendation v2 from '2819441432-f4ls5': 112</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f istiofiles/rate_limit_rule.yml
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/routing-advanced/rate-limiting/rate_limit_rule.yml
 
-istioctl delete -f istiofiles/recommendation_rate_limit_handler.yml</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>or you can run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+kubectl delete -f manifests/istio/routing-advanced/rate-limiting/recommendation_rate_limit_handler.yml</code></pre>
 </div>
 </div>
 </div>

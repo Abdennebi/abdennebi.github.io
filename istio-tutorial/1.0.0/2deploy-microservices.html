@@ -119,10 +119,10 @@
     <a class="nav-link" href="4simple-routerules.html#istiorouting">Changing Istio Routings</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="4simple-routerules.html#alltorecommendationv2">All Users To Recommendation V2</a>
+    <a class="nav-link" href="4simple-routerules.html#routeallthetraffictorecommendationv2">Route all the traffic to recommendation:v2</a>
   </li>
   <li class="nav-item" data-depth="3">
-    <a class="nav-link" href="4simple-routerules.html#alltorecommendationv1">All Users To Recommendation V1</a>
+    <a class="nav-link" href="4simple-routerules.html#routeallthetraffictorecommendationv1">Route all the traffic to recommendation:v1</a>
   </li>
   <li class="nav-item" data-depth="3">
     <a class="nav-link" href="4simple-routerules.html#alltorecommendationv1v2">All Users To Recommendation V1 and V2</a>
@@ -389,8 +389,7 @@ cd istio-tutorial</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/customer-deployment.yml
-kubectl apply -f manifests/kubernetes/customer-service.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/customer.yml</code></pre>
 </div>
 </div>
 </div>
@@ -412,7 +411,7 @@ kubectl apply -f manifests/kubernetes/customer-service.yml</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -449,8 +448,7 @@ kubectl apply -f manifests/kubernetes/customer-service.yml</code></pre>
 <h3 id="_preference_build_using_docker_daemon"><a class="anchor" href="#_preference_build_using_docker_daemon"></a>Preference build using Docker daemon</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/preference-deployment-v1.yml
-kubectl apply -f manifests/kubernetes/preference-service.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/preference-v1.yml</code></pre>
 </div>
 </div>
 </div>
@@ -466,7 +464,7 @@ kubectl apply -f manifests/kubernetes/preference-service.yml</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -525,8 +523,7 @@ The tag <code>v1</code> at the end of the image name matters. We will be creatin
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-deployment-v1.yml
-kubectl apply -f manifests/kubernetes/recommendation-service.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-v1.yml</code></pre>
 </div>
 </div>
 <div class="sect2">
@@ -536,7 +533,7 @@ kubectl apply -f manifests/kubernetes/recommendation-service.yml</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
