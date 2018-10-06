@@ -521,7 +521,7 @@ Since no Egress service entry has been registered to access an external site, th
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl -m 5 __CUSTOMER__
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl -m 5 $CUTOMER_URL
 curl: (28) Operation timed out after 5000 milliseconds with 0 bytes received</code></pre>
 </div>
 </div>
@@ -534,7 +534,7 @@ curl: (28) Operation timed out after 5000 milliseconds with 0 bytes received</co
 
 istioctl get serviceentry
 
-curl __CUSTOMER__
+curl $CUTOMER_URL
 customer =&gt; preference =&gt; Mon, 16 Jul 2018 12:03:38 GMT recommendation v3 from '7b445dd469-j6rkg': 1</code></pre>
 </div>
 </div>

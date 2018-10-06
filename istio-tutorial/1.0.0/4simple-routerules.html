@@ -386,7 +386,7 @@ recommendation-v2-2815683430-vpx4p   2/2       Running   0          15s</code></
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl __CUSTOMER__</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -397,7 +397,7 @@ recommendation-v2-2815683430-vpx4p   2/2       Running   0          15s</code></
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code>curl __CUSTOMER__</code></pre>
+<pre class="highlightjs highlight"><code>curl $CUTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -513,7 +513,7 @@ spec:
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-virtual-service-v2.yml
 
-curl __CUSTOMER__</code></pre>
+curl $CUTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -526,7 +526,7 @@ curl __CUSTOMER__</code></pre>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-virtual-service-v1.yml
 
-curl __CUSTOMER__</code></pre>
+curl $CUTOMER_URL</code></pre>
 </div>
 </div>
 </div>
@@ -537,11 +537,7 @@ curl __CUSTOMER__</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/routing-simple/recommendation-virtual-service-v1.yml
-
-or
-
-kubectl get virtualservice recommendation</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete virtualservice recommendation</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -549,7 +545,7 @@ kubectl get virtualservice recommendation</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl __CUSTOMER__</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUTOMER_URL</code></pre>
 </div>
 </div>
 </div>
@@ -580,7 +576,7 @@ recommendation-v2-2815683430-vn77w   2/2       Running   0          1h</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl __CUSTOMER__; sleep .5; done</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUTOMER_URL; sleep .5; done</code></pre>
 </div>
 </div>
 <div class="paragraph">
