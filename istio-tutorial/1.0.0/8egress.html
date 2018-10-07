@@ -353,31 +353,10 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Let&#8217;s see an example of using egress route by deploying a recommendation:v3 version. Egress service entry allow you to apply rules to how internal services interact with external APIs/services.</p>
+<p>Let&#8217;s see an example of using egress route by deploying a recommendation:v3 version. Egress service entry allow you to apply rules to how internal services interact with external services.</p>
 </div>
 <div class="paragraph">
 <p>In this case, we are going to configure Istio to access <a href="http://now.httpbin.org" class="bare">http://now.httpbin.org</a> from internal service (recommendation:v3).</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-<div class="title">Before Start</div>
-<div class="paragraph">
-<p>You should have NO virtualservice nor destinationrule (in <code>tutorial</code> namespace) <code>istioctl get virtualservice</code> <code>istioctl get destinationrule</code>
-if so run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
-</div>
-</div>
-</td>
-</tr>
-</table>
 </div>
 </div>
 </div>
@@ -394,12 +373,6 @@ if so run:</p>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">private static final String RESPONSE_STRING_FORMAT = "recommendation v3 from '%s': %d\n";</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>The "v3" tag during the Docker build is significant.</p>
-</div>
-<div class="paragraph">
-<p>There is also a third <code>deployment.yml</code> file to label things correctly</p>
 </div>
 <div class="paragraph">
 <p>The second change is to change the default output to make a call to <a href="http://now.httpbin.org" class="bare">http://now.httpbin.org</a>.</p>
@@ -422,47 +395,12 @@ if so run:</p>
         router.get("/").handler(this::getNow);</code></pre>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_docker_build_if_you_have_access_to_docker_daemon"><a class="anchor" href="#_docker_build_if_you_have_access_to_docker_daemon"></a>Docker build (if you have access to Docker daemon)</h3>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd recommendation/java/vertx
-mvn clean package
-
-docker build -t example/recommendation:v3 .
-
-docker images | grep recommendation
-example/recommendation                  v3                  0671dfb295df        3 seconds ago       443MB
-example/recommendation                  v2                  c31e399a9628        5 seconds ago       438MB
-example/recommendation                  v1                  f072978d9cf6        8 minutes ago       438MB</code></pre>
-</div>
-</div>
 <div class="paragraph">
 <p><em>Important:</em> We have a 3rd Deployment to manage the v3 version of recommendation.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment-v3.yml) -n tutorial
-kubectl get pods -w
-
-or
-
-kubectl apply -f &lt;(istioctl kube-inject -f src/main/kubernetes/Deployment-v3.yml) -n tutorial
-kubectl get pods -w</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_openshift_s2i_strategy_if_you_don_t_have_access_to_docker_daemon"><a class="anchor" href="#_openshift_s2i_strategy_if_you_don_t_have_access_to_docker_daemon"></a>OpenShift S2I strategy (if you DON&#8217;T have access to Docker daemon)</h3>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn clean package -f recommendation/java/vertx
-oc new-app -l app=recommendation,version=v3 --name=recommendation-v3 --context-dir=recommendation/java/vertx -e JAEGER_SERVICE_NAME=recommendation JAEGER_ENDPOINT=http://jaeger-collector.istio-system.svc:14268/api/traces JAEGER_PROPAGATION=b3 JAEGER_SAMPLER_TYPE=const JAEGER_SAMPLER_PARAM=1 JAVA_OPTIONS='-Xms128m -Xmx256m -Djava.net.preferIPv4Stack=true' fabric8/s2i-java~https://github.com/redhat-developer-demos/istio-tutorial -o yaml  &gt; recommendation-v3.yml
-oc apply -f &lt;(istioctl kube-inject -f recommendation-v3.yml) -n tutorial
-oc cancel-build bc/recommendation-v3
-oc delete svc/recommendation-v3
-oc start-build recommendation-v3 --from-dir=. --follow</code></pre>
-</div>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-v3.yml</code></pre>
 </div>
 </div>
 <div class="sect2">
@@ -474,15 +412,10 @@ oc start-build recommendation-v3 --from-dir=. --follow</code></pre>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">NAME                                  READY     STATUS    RESTARTS   AGE
 customer-3600192384-fpljb             2/2       Running   0          17m
-preference-243057078-8c5hz           2/2       Running   0          15m
-recommendation-v1-60483540-9snd9     2/2       Running   0          12m
-recommendation-v2-2815683430-vpx4p   2/2       Running   0          15s
-recommendation-v3-7b445dd469-j6rkg   2/2       Running   0          2m</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-terminal hljs" data-lang="terminal">cd ../../..</code></pre>
+preference-243057078-8c5hz            2/2       Running   0          15m
+recommendation-v1-60483540-9snd9      2/2       Running   0          12m
+recommendation-v2-2815683430-vpx4p    2/2       Running   0          15s
+recommendation-v3-7b445dd469-j6rkg    2/2       Running   0          2m</code></pre>
 </div>
 </div>
 </div>
@@ -499,8 +432,8 @@ recommendation-v3-7b445dd469-j6rkg   2/2       Running   0          2m</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/destination-rule-recommendation-v1-v2-v3.yml -n tutorial
-istioctl apply -f manifests/istio/virtual-service-recommendation-v3.yml</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/egress/recommendation-destination-rule--v1-v2-v3.yml
+kubectl apply -f manifests/istio/egress/recommendation-v3-virtual-service.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -530,10 +463,8 @@ curl: (28) Operation timed out after 5000 milliseconds with 0 bytes received</co
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/service-entry-egress-httpbin.yml -n tutorial
-
-istioctl get serviceentry
-
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/egress/httpbin-service-entry-egress.yml
+kubectl get serviceentry
 curl $CUSTOMER_URL
 customer =&gt; preference =&gt; Mon, 16 Jul 2018 12:03:38 GMT recommendation v3 from '7b445dd469-j6rkg': 1</code></pre>
 </div>
@@ -543,32 +474,16 @@ customer =&gt; preference =&gt; Mon, 16 Jul 2018 12:03:38 GMT recommendation v3 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -it $(kubectl get pods -o jsonpath="{.items[*].metadata.name}" -l app=recommendation,version=v3) -c recommendation /bin/bash
-
-or
-
-kubectl exec -it $(kubectl get pods -o jsonpath="{.items[*].metadata.name}" -l app=egressgithub,version=v3) -c recommendation /bin/bash
-
-curl http://now.httpbin.org
-
-exit</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl exec -it $(kubectl get pods -o jsonpath="{.items[*].metadata.name}" -l app=recommendation,version=v3) -c recommendation -- curl http://now.httpbin.org</code></pre>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_clean_up"><a class="anchor" href="#_clean_up"></a>Clean up</h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f manifests/istio/service-entry-egress-httpbin.yml -n tutorial
-istioctl delete -f manifests/istio/destination-rule-recommendation-v1-v2-v3.yml -n tutorial
-istioctl delete -f manifests/istio/virtual-service-recommendation-v3.yml</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>or you can run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete ServiceEntry httpbin-egress-rule
+kubectl delete DestinationRule recommendation
+kubectl delete VirtualService recommendation</code></pre>
 </div>
 </div>
 </div>
