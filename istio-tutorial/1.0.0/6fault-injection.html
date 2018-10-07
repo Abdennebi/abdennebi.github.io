@@ -353,28 +353,7 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Apply some chaos engineering by throwing in some HTTP errors or network delays. Understanding failure scenarios is a critical aspect of microservices architecture (aka distributed computing)</p>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-<div class="title">Before Start</div>
-<div class="paragraph">
-<p>You should have NO virtualservice nor destinationrule (in <code>tutorial</code> namespace) <code>istioctl get virtualservice</code> <code>istioctl get destinationrule</code>
-if so run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
-</div>
-</div>
-</td>
-</tr>
-</table>
+<p>Apply some chaos engineering by throwing in some HTTP errors or network delays. Understanding failure scenarios is a critical aspect of microservices architecture.</p>
 </div>
 </div>
 </div>
@@ -382,17 +361,15 @@ if so run:</p>
 <h2 id="503error"><a class="anchor" href="#503error"></a>HTTP Error 503</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>By default, recommendation v1 and v2 are being randomly load-balanced as that is the default behavior in Kubernetes/OpenShift</p>
+<p>By default, recommendation v1 and v2 are being randomly load-balanced as that is the default behavior in Kubernetes.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ oc get pods -l app=recommendation -n tutorial
-or
-$ kubectl get pods -l app=recommendation -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -l app=recommendation
 
 NAME                                  READY     STATUS    RESTARTS   AGE
-recommendation-v1-3719512284-7mlzw   2/2       Running   6          18h
-recommendation-v2-2815683430-vn77w   2/2       Running   0          3h</code></pre>
+recommendation-v1-798bf87d96-d9d95   2/2       Running   4          11h
+recommendation-v2-7bc4f7f696-d9j2m   2/2       Running   1          10h</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -400,8 +377,8 @@ recommendation-v2-2815683430-vn77w   2/2       Running   0          3h</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/destination-rule-recommendation.yml -n tutorial
-istioctl apply -f manifests/istio/virtual-service-recommendation-503.yml -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/fault-injection/recommendation-destination-rule.yml
+kubectl apply -f manifests/istio/fault-injection/inject-error/recommendation-virtual-service-503.yml
 
 curl $CUSTOMER_URL
 customer =&gt; preference =&gt; recommendation v1 from '99634814-sf4cl': 88
@@ -416,7 +393,7 @@ customer =&gt; preference =&gt; recommendation v2 from '2819441432-qsp25': 51</c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f manifests/istio/virtual-service-recommendation-503.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/fault-injection/inject-error/recommendation-virtual-service-503.yml</code></pre>
 </div>
 </div>
 </div>
@@ -429,7 +406,7 @@ customer =&gt; preference =&gt; recommendation v2 from '2819441432-qsp25': 51</c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/virtual-service-recommendation-delay.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/fault-injection/delay/recommendation-virtual-service-delay.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -446,22 +423,16 @@ If you are monitoring the logs for recommendation v1 and v2, you will also see t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">stern recommendation -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">stern recommendation -c recommendation</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>or
-`bash
-./kubetail.sh recommendation -n tutorial
-`</p>
 </div>
 <div class="paragraph">
 <p>Clean up</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code>istioctl delete -f manifests/istio/destination-rule-recommendation.yml -n tutorial
-istioctl delete -f manifests/istio/virtual-service-recommendation-delay.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code>kubectl delete -f manifests/istio/fault-injection/recommendation-destination-rule.yml
+kubectl delete -f manifests/istio/fault-injection/delay/recommendation-virtual-service-delay.yml</code></pre>
 </div>
 </div>
 </div>
@@ -477,9 +448,7 @@ istioctl delete -f manifests/istio/virtual-service-recommendation-delay.yml -n t
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -it $(oc get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash
-or
-kubectl exec -it $(oc get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl exec -it $(kubectl get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -487,15 +456,15 @@ kubectl exec -it $(oc get pods|grep recommendation-v2|awk '{ print $1 }'|head -1
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/misbehave
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl 127.0.0.1:8080/misbehave
 exit</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>This is a special endpoint that will make our application return only `503`s.</p>
+<p>This is a special endpoint that will make our application return only <code>503</code>s.</p>
 </div>
 <div class="paragraph">
-<p>Now, if you hit the customer endpoint several times, you should see some 503&#8217;s</p>
+<p>Now, if you hit the customer endpoint several times, you should see some <code>503</code>'s</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -520,7 +489,7 @@ customer =&gt; 503 preference =&gt; 503 recommendation misbehavior from '6f64f9c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/virtual-service-recommendation-v2_retry.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/fault-injection/retry/recommendation-virtual-service-v2_retry.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -540,7 +509,7 @@ customer =&gt; preference =&gt; recommendation v1 from '2036617847-m9glz': 198</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl get virtualservices -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl  get virtualservices -o yaml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -548,7 +517,7 @@ customer =&gt; preference =&gt; recommendation v1 from '2036617847-m9glz': 198</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete virtualservice recommendation -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete virtualservice recommendation
 
 while true; do curl $CUSTOMER_URL; sleep .5; done
 
@@ -575,9 +544,7 @@ customer =&gt; 503 preference =&gt; 503 recommendation misbehavior from '6f64f9c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -it $(oc get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash
-or
-kubectl exec -it $(oc get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl exec -it $(oc get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -585,7 +552,7 @@ kubectl exec -it $(oc get pods|grep recommendation-v2|awk '{ print $1 }'|head -1
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/behave
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl 127.0.0.1:8080/behave
 exit</code></pre>
 </div>
 </div>
@@ -607,48 +574,14 @@ customer =&gt; preference =&gt; recommendation v1 from '2039379827-h58vw': 130</
 <h2 id="timeout"><a class="anchor" href="#timeout"></a>Timeout</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Wait only N seconds before giving up and failing. At this point, no other virtual service nor destination rule (in <code>tutorial</code> namespace) should be in effect. To check it run <code>istioctl get virtualservice</code> <code>istioctl get destinationrule</code> and if so <code>istioctl delete virtualservice virtualservicename -n tutorial</code> and <code>istioctl delete destinationrule destinationrulename -n tutorial</code></p>
+<p>Wait only N seconds before giving up and failing. At this point, no other virtual service nor destination rule should be in effect.</p>
 </div>
 <div class="paragraph">
-<p>First, introduce some wait time in <code>recommendation v2</code> by uncommenting the line that calls the <code>timeout()</code> method. Update <code>RecommendationVerticle.java</code> making it a slow performer with a 3 second delay.</p>
+<p>First, introduce some wait time in <code>recommendation v2</code> by deploying a slow version making it a slow performer with a 3 second delay.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">    @Override
-    public void start() throws Exception {
-        Router router = Router.router(vertx);
-        router.get("/").handler(this::logging);
-        router.get("/").handler(this::timeout);
-        router.get("/").handler(this::getRecommendations);
-        router.get("/misbehave").handler(this::misbehave);
-        router.get("/behave").handler(this::behave);
-
-        HealthCheckHandler hc = HealthCheckHandler.create(vertx);
-        hc.register("dummy-health-check", future -&gt; future.complete(Status.OK()));
-        router.get("/health").handler(hc);
-
-        vertx.createHttpServer().requestHandler(router::accept).listen(8080);
-    }</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Rebuild and redeploy</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd recommendation/java/vertx
-
-mvn clean package
-
-docker build -t example/recommendation:v2 .
-
-docker images | grep recommendation
-
-oc delete pod -l app=recommendation,version=v2 -n tutorial
-or
-kubectl delete pod -l app=recommendation,version=v2 -n tutorial
-
-cd ../../..</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">kubectl apply -f manifests/kubernetes/recommendation-v2_slow.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -664,7 +597,7 @@ cd ../../..</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/virtual-service-recommendation-timeout.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/fault-injection/timeout/recommendation-irtual-service-timeout.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -687,15 +620,7 @@ curl $CUSTOMER_URL  0.01s user 0.00s system 0% cpu 1.034 total</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f manifests/istio/virtual-service-recommendation-timeout.yml -n tutorial</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>or you can run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/fault-injection/timeout/recommendation-irtual-service-timeout.yml</code></pre>
 </div>
 </div>
 </div>
