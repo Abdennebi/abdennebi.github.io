@@ -443,7 +443,7 @@ example/recommendation                  v1                  f072978d9cf6        
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment-v3.yml) -n tutorial
-oc get pods -w
+kubectl get pods -w
 
 or
 
@@ -543,11 +543,11 @@ customer =&gt; preference =&gt; Mon, 16 Jul 2018 12:03:38 GMT recommendation v3 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -it $(oc get pods -o jsonpath="{.items[*].metadata.name}" -l app=recommendation,version=v3) -c recommendation /bin/bash
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -it $(kubectl get pods -o jsonpath="{.items[*].metadata.name}" -l app=recommendation,version=v3) -c recommendation /bin/bash
 
 or
 
-kubectl exec -it $(oc get pods -o jsonpath="{.items[*].metadata.name}" -l app=egressgithub,version=v3) -c recommendation /bin/bash
+kubectl exec -it $(kubectl get pods -o jsonpath="{.items[*].metadata.name}" -l app=egressgithub,version=v3) -c recommendation /bin/bash
 
 curl http://now.httpbin.org
 

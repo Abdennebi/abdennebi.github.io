@@ -435,7 +435,7 @@ We have a 2nd Deployment to manage the v2 version of preference.
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment-v2.yml) -n tutorial
 
-oc get pods -w
+kubectl get pods -w
 
 cd ../../..</code></pre>
 </div>
@@ -520,7 +520,7 @@ docker build -t example/recommendation:virtualized .
 docker images | grep recommendation
 
 oc apply -f &lt;(istioctl kube-inject -f ../kubernetes/Deployment-virtualized.yml) -n tutorial
-oc get pods -w
+kubectl get pods -w
 
 cd ../..</code></pre>
 </div>

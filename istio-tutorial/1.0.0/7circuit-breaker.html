@@ -494,7 +494,7 @@ istioctl apply -f manifests/istio/virtual-service-recommendation-v1_and_v2_50_50
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc scale deployment recommendation-v2 --replicas=2 -n tutorial
-oc get pods -w
+kubectl get pods -w
 
 or
 
@@ -550,7 +550,7 @@ customer =&gt; preference =&gt; recommendation v2 from '2036617847-hdjv2': 220</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -l app=recommendation,version=v2
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -l app=recommendation,version=v2
 or
 kubectl get pods -l app=recommendation,version=v2</code></pre>
 </div>
@@ -569,9 +569,9 @@ recommendation-v2-2036617847-spdrb   2/2       Running   0          7m</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -it $(oc get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -it $(kubectl get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash
 or
-kubectl exec -it $(oc get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash</code></pre>
+kubectl exec -it $(kubectl get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash</code></pre>
 </div>
 </div>
 <div class="paragraph">
