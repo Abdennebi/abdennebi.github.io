@@ -346,61 +346,42 @@
     <li class="crumb"><a href="7circuit-breaker.html">7. Circuit Breaker</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="file:///f/repo/external/github.com/redhat-developer-demos/istio-tutorial/documentation/modules/ROOT/pages/7circuit-breaker.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="https://github.com/Abdennebi/istio-tutorial/edit/master/documentation/modules/ROOT/pages/7circuit-breaker.adoc">Edit this Page</a></div>
 </div>
 <article class="doc">
 <h1>Circuit Breaker</h1>
-<div id="preamble">
-<div class="sectionbody">
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-<div class="title">Before Start</div>
-<div class="paragraph">
-<p>You should have NO virtualservice nor destinationrule (in <code>tutorial</code> namespace) <code>istioctl get virtualservice</code> <code>istioctl get destinationrule</code>
-if so run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
-</div>
-</div>
-</td>
-</tr>
-</table>
-</div>
-</div>
-</div>
 <div class="sect1">
 <h2 id="failfast"><a class="anchor" href="#failfast"></a>Fail Fast with Max Connections and Max Pending Requests</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>First, make sure to uncomment <code>router.get(&quot;/&quot;).handler(this::timeout);</code> in the RecommendationVerticle.java:</p>
+<p>For this scenario, we will equally split the traffic between recommendation v1 and v2 :</p>
+</div>
+<div class="listingblock">
+<div class="title">Virtual Service</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">kind: VirtualService
+metadata:
+  name: recommendation
+spec:
+  hosts:
+  - recommendation
+  http:
+  - route:
+    - destination:
+        host: recommendation
+        subset: version-v1
+      weight: 50
+    - destination:
+        host: recommendation
+        subset: version-v2
+      weight: 50</code></pre>
+</div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">    Router router = Router.router(vertx);
-    router.get("/").handler(this::logging);
-    router.get("/").handler(this::timeout);
-    router.get("/").handler(this::getRecommendations);
-    router.get("/misbehave").handler(this::misbehave);
-    router.get("/behave").handler(this::behave);</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>And follow the Updating &amp; redeploying code steps to get this slower v2 deployed.</p>
-</div>
-<div class="paragraph">
-<p>Second, you need to <strong>ensure</strong> you have a <code>destinationrule</code> and <code>virtualservice</code> in place. Let&#8217;s use a 50/50 split of traffic:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/destination-rule-recommendation-v1-v2.yml -n tutorial
-istioctl apply -f manifests/istio/virtual-service-recommendation-v1_and_v2_50_50.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-destination-rule-v1-v2.yml
+
+kubectl apply -f manifests/istio/circuit-breaker/fail-fast/recommendation-virtual-service-v1_and_v2_50_50.yml</code></pre>
 </div>
 </div>
 <div class="sect2">
@@ -410,7 +391,7 @@ istioctl apply -f manifests/istio/virtual-service-recommendation-v1_and_v2_50_50
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v $CUSTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">docker run lonelyplanet/siege siege -r 2 -c 20 -v $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -419,55 +400,82 @@ istioctl apply -f manifests/istio/virtual-service-recommendation-v1_and_v2_50_50
 <div class="paragraph">
 <p><span class="image"><img src="_images/siege_ok.png" alt="siege output with all successful requests"></span></p>
 </div>
-<div class="paragraph">
-<p>All of the requests to our system were successful, but it took some time to run the test, as the <code>v2</code> instance/pod was a slow performer.</p>
-</div>
-<div class="paragraph">
-<p>But suppose that in a production system this 3s delay was caused by too many concurrent requests to the same instance/pod. We don&#8217;t want multiple requests getting queued or making the instance/pod even slower. So we&#8217;ll add a circuit breaker that will <strong>open</strong> whenever we have more than 1 request being handled by any instance/pod.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f manifests/istio/destination-rule-recommendation_cb_policy_version_v2.yml -n tutorial
-
-istioctl get destinationrule -n tutorial</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>More information on the fields for the simple circuit-breaker
-<a href="https://istio.io/docs/reference/config/istio.routing.v1alpha1.html#CircuitBreaker.SimpleCircuitBreakerPolicy">https://istio.io/docs/reference/config/istio.routing.v1alpha1.html#CircuitBreaker.SimpleCircuitBreakerPolicy</a></p>
+<div class="admonitionblock caution">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-caution" title="Caution"></i>
+</td>
+<td class="content">
+All of the requests to our system were successful, <strong>but it took some time to run the test, as the <code>v2</code> instance was a slow performer</strong>.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
 <h3 id="circuitbreaker"><a class="anchor" href="#circuitbreaker"></a>Load test with circuit breaker</h3>
 <div class="paragraph">
+<p>Suppose that in a production system this 3s delay was caused by too many concurrent requests to the same instance. We don&#8217;t want multiple requests getting queued or making the instance even slower. So we&#8217;ll add a circuit breaker that will <strong>open</strong> whenever we have more than 1 request being handled by any instance.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/circuit-breaker/fail-fast/recommendation-destination-rule-cb_policy_version.yml</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Destination Rule</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">kind: DestinationRule
+...
+spec:
+  host: recommendation
+  subsets:
+    - name: version-v1
+      labels:
+        version: v1
+    - name: version-v2
+      labels:
+        version: v2
+      trafficPolicy:
+        connectionPool:
+          http:
+            http1MaxPendingRequests: 1
+            maxRequestsPerConnection: 1
+          tcp:
+            maxConnections: 1
+        outlierDetection:
+          baseEjectionTime: 120.000s
+          consecutiveErrors: 1
+          interval: 1.000s
+          maxEjectionPercent: 100</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>More information on the fields for the simple <a href="https://istio.io/docs/reference/config/istio.routing.v1alpha1.html#CircuitBreaker.SimpleCircuitBreakerPolicy">circuit-breaker</a></p>
+</div>
+<div class="paragraph">
 <p>Now let&#8217;s see what is the behavior of the system running <code>siege</code> again:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">siege -r 2 -c 20 -v $CUSTOMER_URL</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">docker run lonelyplanet/siege siege -r 2 -c 20 -v $CUSTOMER_URL</code></pre>
 </div>
 </div>
 <div class="paragraph">
 <p><span class="image"><img src="_images/siege_cb_503.png" alt="siege output with some 503 requests due to open circuit breaker"></span></p>
 </div>
 <div class="paragraph">
-<p>You can run siege multiple times, but in all of the executions you should see some <code>503</code> errors being displayed in the results. That&#8217;s the circuit breaker being opened whenever Istio detects more than 1 pending request being handled by the instance/pod.</p>
+<p>You can run siege multiple times, but in all of the executions you should see some <code>503</code> errors being displayed in the results. That&#8217;s the circuit breaker being opened whenever Istio detects more than 1 pending request being handled by the instance.</p>
 </div>
 <div class="paragraph">
 <p>Clean up</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete virtualservice recommendation -n tutorial
-istioctl delete -f manifests/istio/destination-rule-recommendation_cb_policy_version_v2.yml -n tutorial</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>or you can run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f manifests/istio/circuit-breaker/fail-fast/recommendation-destination-rule-cb_policy_version.yml
+
+kubectl delete -f manifests/istio/circuit-breaker/fail-fast/recommendation-virtual-service-v1_and_v2_50_50.yml</code></pre>
 </div>
 </div>
 </div>
@@ -484,8 +492,9 @@ istioctl delete -f manifests/istio/destination-rule-recommendation_cb_policy_ver
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/destination-rule-recommendation-v1-v2.yml -n tutorial
-istioctl apply -f manifests/istio/virtual-service-recommendation-v1_and_v2_50_50.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-destination-rule-v1-v2.yml
+
+kubectl apply -f manifests/istio/circuit-breaker/fail-fast/recommendation-virtual-service-v1_and_v2_50_50.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -493,13 +502,7 @@ istioctl apply -f manifests/istio/virtual-service-recommendation-v1_and_v2_50_50
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc scale deployment recommendation-v2 --replicas=2 -n tutorial
-kubectl get pods -w
-
-or
-
-kubectl scale deployment recommendation-v2 --replicas=2 -n tutorial
-kubectl get pods -w</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl scale deployment recommendation-v2 --replicas=2 -n tutorial</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -550,9 +553,7 @@ customer =&gt; preference =&gt; recommendation v2 from '2036617847-hdjv2': 220</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -l app=recommendation,version=v2
-or
-kubectl get pods -l app=recommendation,version=v2</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -l app=recommendation,version=v2</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -560,8 +561,9 @@ kubectl get pods -l app=recommendation,version=v2</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">recommendation-v2-2036617847-hdjv2   2/2       Running   0          1h
-recommendation-v2-2036617847-spdrb   2/2       Running   0          7m</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">NAME                                 READY     STATUS    RESTARTS   AGE
+recommendation-v2-777598bdc4-d97p7   2/2       Running   0          2m
+recommendation-v2-777598bdc4-kr7rt   2/2       Running   0          51m</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -569,22 +571,13 @@ recommendation-v2-2036617847-spdrb   2/2       Running   0          7m</code></p
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc exec -it $(kubectl get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash
-or
-kubectl exec -it $(kubectl get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation /bin/bash</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl exec -it $(kubectl get pods|grep recommendation-v2|awk '{ print $1 }'|head -1) -c recommendation -- curl 127.0.0.1:8080/misbehave
+
+Output:  Following requests to '/' will return a 503</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>You will be inside the application container of your pod <code>recommendation-v2-2036617847-spdrb</code>. Now execute:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/misbehave
-exit</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>This is a special endpoint that will make our application return only `503`s.</p>
+<p>This is a special endpoint that will make our application return only <code>503</code>s.</p>
 </div>
 <div class="paragraph">
 <p>Throw some requests at the customer endpoint:</p>
@@ -625,7 +618,31 @@ customer =&gt; 503 preference =&gt; 503 recommendation misbehavior from '2036617
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f manifests/istio/destination-rule-recommendation_cb_policy_pool_ejection.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">kind: DestinationRule
+...
+spec:
+  host: recommendation
+  subsets:
+  ...
+  - labels:
+      version: v2
+    name: version-v2
+    trafficPolicy:
+      connectionPool:
+        http: {}
+        tcp: {}
+      loadBalancer:
+        simple: RANDOM
+      outlierDetection:
+        baseEjectionTime: 15.000s
+        consecutiveErrors: 1
+        interval: 5.000s
+        maxEjectionPercent: 100</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/circuit-breaker/pool-ejection/recommendation-destination-rule-cb_policy_pool_ejection.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -695,11 +712,11 @@ customer =&gt; preference =&gt; recommendation v2 from '2036617847-hdjv2': 270</
 - <strong>Retries</strong> to forward the request to another instance just in case we get an open circuit breaker and/or pool ejection;</p>
 </div>
 <div class="paragraph">
-<p>By simply adding a <strong>retry</strong> configuration to our current <code>virtualservice</code>, we&#8217;ll be able to get rid completely of our `503`s requests. This means that whenever we receive a failed request from an ejected instance, Istio will forward the request to another supposably healthy instance.</p>
+<p>By simply adding a <strong>retry</strong> configuration to our current <code>virtualservice</code>, we&#8217;ll be able to get rid completely of our <code>503</code>s requests. This means that whenever we receive a failed request from an ejected instance, Istio will forward the request to another supposably healthy instance.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl replace -f manifests/istio/virtual-service-recommendation-v1_and_v2_retry.yml -n tutorial</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/fault-injection/retry/recommendation-virtual-service-v2_retry.yml</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -756,15 +773,11 @@ customer =&gt; preference =&gt; recommendation v1 from '2039379827-jmm6x': 554</
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc scale deployment recommendation-v2 --replicas=1 -n tutorial
-oc delete pod -l app=recommendation,version=v2
-or
-kubectl scale deployment recommendation-v2 --replicas=1 -n tutorial
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl scale deployment recommendation-v2 --replicas=1 -n tutorial
 kubectl delete pod -l app=recommendation,version=v2
 
-
-istioctl delete virtualservice recommendation -n tutorial
-istioctl delete destinationrule recommendation -n tutorial</code></pre>
+kubectl delete virtualservice recommendation
+kubectl delete destinationrule recommendation</code></pre>
 </div>
 </div>
 </div>
