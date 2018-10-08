@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Istio on Google Kubernetes Engine :: Istio Tutorial Docs</title>
-    <link rel="canonical" href="https://redhat-developer-demos.github.io/istio-tutorial/istio-tutorial/1.0.0/index.html">
+    <title>Service Virtualization and Istio :: Istio Tutorial Docs</title>
+    <link rel="canonical" href="https://redhat-developer-demos.github.io/istio-tutorial/istio-tutorial/1.0.0/09_virtualization.html">
     <meta name="generator" content="Antora 1.1.1">
     <link rel="stylesheet" href="../../_/css/site.css">
 <link rel="icon" href="../../_/img/favicon.ico" type="image/x-icon">  </head>
@@ -53,7 +53,7 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
-  <li class="nav-item is-current-page" data-depth="1">
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="index.html">Introduction to Istio Tutorial</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -242,18 +242,18 @@
   </li>
 </ul>
   </li>
-  <li class="nav-item" data-depth="1">
+  <li class="nav-item is-current-page" data-depth="1">
     <button class="nav-toggle"></button>
     <a class="nav-link" href="09_virtualization.html">9. Service Virtualization and Istio</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="09_virtualization.html#deploypreferencev2">Deploy Preference V2</a>
+    <a class="nav-link" href="#deploypreferencev2">Deploy Preference V2</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="09_virtualization.html#servicevirtualization">Adding Service Virtualization</a>
+    <a class="nav-link" href="#servicevirtualization">Adding Service Virtualization</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="09_virtualization.html#cleanup">Clean Up</a>
+    <a class="nav-link" href="#cleanup">Clean Up</a>
   </li>
 </ul>
   </li>
@@ -299,37 +299,271 @@
   <main class="main">
 <div class="toolbar" role="navigation">
   <button class="navigation-toggle"></button>
-  <a href="index.html" class="home-link is-current"></a>
+  <a href="index.html" class="home-link"></a>
 <nav class="crumbs" aria-label="breadcrumbs">
   <ul>
     <li class="crumb"><a href="index.html">Istio Tutorial</a></li>
-    <li class="crumb"><a href="index.html">Introduction to Istio Tutorial</a></li>
+    <li class="crumb"><a href="09_virtualization.html">9. Service Virtualization and Istio</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="https://github.com/Abdennebi/istio-tutorial/edit/master/documentation/modules/ROOT/pages/index.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="https://github.com/Abdennebi/istio-tutorial/edit/master/documentation/modules/ROOT/pages/09_virtualization.adoc">Edit this Page</a></div>
 </div>
 <article class="doc">
-<h1>Istio on Google Kubernetes Engine</h1>
-<div class="ulist">
-<ul>
-<li>
-<p>A HTML version of this file is published at <a href="https://abdennebi.github.io/istio-tutorial/" class="bare">https://abdennebi.github.io/istio-tutorial/</a></p>
-</li>
-<li>
-<p>The source code is available at <a href="https://github.com/abdennebi/istio-tutorial" class="bare">https://github.com/abdennebi/istio-tutorial</a></p>
-</li>
-</ul>
-</div>
+<h1>Service Virtualization and Istio</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="title">Before Start</div>
 <div class="paragraph">
-<p>There are three different and super simple microservices in this system and they are chained together in the following sequence:</p>
+<p>You should have NO virtualservice nor destinationrule (in <code>tutorial</code> namespace) <code>istioctl get virtualservice</code> <code>istioctl get destinationrule</code>
+if so run:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code>customer → preference → recommendation</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./scripts/clean.sh</code></pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>We&#8217;ll create version 2 of preferences service.
+But in this case instead of communicating with recommendation service, we are going to communicate with a virtualized recommendation service.</p>
+</div>
+<div class="paragraph">
+<p>Service virtualization can be understood as something similar as mocking where instead of mocking components (classes), you are mocking remote services.</p>
+</div>
+<div class="paragraph">
+<p>For this concrete case, virtualized recommendation service will return <code>recommendation v2 from 'virtualized': 2</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="deploypreferencev2"><a class="anchor" href="#deploypreferencev2"></a>Deploy Preference:v2</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Move to preference directory:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd preference/java/springboot</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>For now, they have a simple exception handling solution for dealing with a missing dependent service: it just returns the error message to the end-user.</p>
+<p>Change <code>PreferencesController.java</code> like the following and creating a "v2" docker image.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">private static final String RESPONSE_STRING_FORMAT = "PREFERENCE =&gt; %s\n";</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The "v2" tag during the Docker build is significant.</p>
+</div>
+<div class="paragraph">
+<p>There is also a second <code>deployment.yml</code> file to label things correctly</p>
+</div>
+<div class="sect2">
+<h3 id="_docker_build_if_you_have_access_to_docker_daemon"><a class="anchor" href="#_docker_build_if_you_have_access_to_docker_daemon"></a>Docker build (if you have access to Docker daemon)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn clean package
+
+docker build -t example/preference:v2 .</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+We have a 2nd Deployment to manage the v2 version of preference.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc apply -f &lt;(istioctl kube-inject -f ../../kubernetes/Deployment-v2.yml) -n tutorial
+
+kubectl get pods -w
+
+cd ../../..</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_openshift_s2i_strategy_if_you_don_t_have_access_to_docker_daemon"><a class="anchor" href="#_openshift_s2i_strategy_if_you_don_t_have_access_to_docker_daemon"></a>OpenShift S2I strategy (if you DON’T have access to Docker daemon)</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn clean package -f preference/java/springboot
+
+oc new-app -l app=preference,version=v2 --name=preference-v2 --context-dir=preference/java/springboot -e JAEGER_SERVICE_NAME=preference JAEGER_ENDPOINT=http://jaeger-collector.istio-system.svc:14268/api/traces JAEGER_PROPAGATION=b3 JAEGER_SAMPLER_TYPE=const JAEGER_SAMPLER_PARAM=1 JAVA_OPTIONS='-Xms128m -Xmx256m -Djava.net.preferIPv4Stack=true' fabric8/s2i-java~https://github.com/redhat-developer-demos/istio-tutorial -o yaml  &gt; preference-v2.yml
+oc apply -f &lt;(istioctl kube-inject -f preference-v2.yml) -n tutorial
+oc cancel-build bc/preference-v2
+oc delete svc/preference-v2
+oc start-build preference-v2 --from-dir=. --follow</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wait_for_v2_to_be_deployed"><a class="anchor" href="#_wait_for_v2_to_be_deployed"></a>Wait for v2 to be deployed</h3>
+<div class="paragraph">
+<p>Wait for those pods to show "2/2", the istio-proxy/envoy sidecar is part of that pod</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                                          READY     STATUS    RESTARTS   AGE
+customer-3647816848-j5xd5                     2/2       Running   25         14d
+preference-v1-406256754-8v7x5                 2/2       Running   12         2h
+preference-v2-3602772496-wmkvl                2/2       Running   12         2h
+recommendation-v1-2409176097-kcjsr            2/2       Running   8          14d
+recommendation-v2-1275713543-2bs5k            2/2       Running   4          2d</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>and test the customer endpoint</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl $CUSTOMER_URL</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>you likely see "customer &#8658; preference &#8658; recommendation v2 from '2819441432-5v22s': 1" as by default you get round-robin load-balancing when there is more than one Pod behind a Service</p>
+</div>
+<div class="paragraph">
+<p>Send several requests to see their responses</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The default Kubernetes/OpenShift behavior is to round-robin load-balance across all available pods behind a single Service.</p>
+</div>
+<div class="paragraph">
+<p>So after running several times you&#8217;ll get some combinations of:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>customer =&gt; preference =&gt; recommendation v1 from '2409176097-kcjsr': 3
+customer =&gt; PREFERENCE =&gt; recommendation v1 from '2409176097-kcjsr': 4
+customer =&gt; preference =&gt; recommendation v2 from '1275713543-2bs5k': 3
+customer =&gt; PREFERENCE =&gt; recommendation v2 from '1275713543-2bs5k': 3</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="servicevirtualization"><a class="anchor" href="#servicevirtualization"></a>Adding Service Virtualization</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We&#8217;ll create a Docker image with Hoverfly (Service Virtualization tool) with some canned requests/answers for recommendation service.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cd recommendation/virtualized
+
+docker build -t example/recommendation:virtualized .
+docker images | grep recommendation
+
+oc apply -f &lt;(istioctl kube-inject -f ../kubernetes/Deployment-virtualized.yml) -n tutorial
+kubectl get pods -w
+
+cd ../..</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>After this step, you should have three versions of recommendation service (v1, v2 and virtualized).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>NAME                                          READY     STATUS    RESTARTS   AGE
+customer-3647816848-j5xd5                     2/2       Running   25         14d
+preference-v1-406256754-8v7x5                 2/2       Running   12         2h
+preference-v2-3602772496-wmkvl                2/2       Running   12         2h
+recommendation-v1-2409176097-kcjsr            2/2       Running   8          14d
+recommendation-v2-1275713543-2bs5k            2/2       Running   4          2d
+recommendation-virtualized-2649197284-rp9cg   2/2       Running   2          3h</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Send several requests to see their responses</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">while true; do curl $CUSTOMER_URL; sleep .5; done</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The default Kubernetes/OpenShift behavior is to round-robin load-balance across all available pods behind a single Service.</p>
+</div>
+<div class="paragraph">
+<p>So after running several times you&#8217;ll get some combinations of:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>customer =&gt; preference =&gt; recommendation v1 from '2409176097-kcjsr': 3
+customer =&gt; PREFERENCE =&gt; recommendation v1 from '2409176097-kcjsr': 2
+customer =&gt; preference =&gt; recommendation v1 from 'virtualized': 2
+customer =&gt; PREFERENCE =&gt; recommendation v1 from 'virtualized': 2
+customer =&gt; preference =&gt; recommendation v2 from '1275713543-2bs5k'
+customer =&gt; PREFERENCE =&gt; recommendation v2 from '1275713543-2bs5k'
+customer =&gt; preference =&gt; recommendation v2 from 'virtualized': 2
+customer =&gt; PREFERENCE =&gt; recommendation v2 from 'virtualized': 2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Notice that now the <code>v2</code> reaches all recommendation services.
+Let&#8217;s avoid this by just sending traffic that comes from preference v2 service to the virtualized recommendation service.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl apply -f manifests/istio/destination-rule-recommendation-v1.yml -n tutorial
+istioctl apply -f manifests/istio/virtual-service-recommendation-virtualized.yml -n tutorial</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then do again some requests and you&#8217;ll get something like:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>customer =&gt; preference =&gt; recommendation v1 from '2409176097-kcjsr': 5
+customer =&gt; PREFERENCE =&gt; recommendation v1 from 'virtualized': 2
+customer =&gt; preference =&gt; recommendation v2 from '1275713543-2bs5k': 6
+customer =&gt; PREFERENCE =&gt; recommendation v2 from 'virtualized': 2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now all requests that are from preference v2 are redirected to virtualized recommendation service.
+In this way when you deploy a new service, you can mirror the traffic without worrying about side-effects on other services, since the requests are redirected to a virtualized instance instead of a production one.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="cleanup"><a class="anchor" href="#cleanup"></a>Clean up</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">istioctl delete -f manifests/istio/destination-rule-recommendation-v1.yml -n tutorial
+istioctl delete -f manifests/istio/virtual-service-recommendation-virtualized.yml -n tutorial
+oc delete all  -l app=preference,version=v2
+oc delete all  -l app=recommendation,version=virtualized</code></pre>
+</div>
+</div>
+</div>
 </div>
 </article>
   </main>

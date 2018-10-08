@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Istio on Google Kubernetes Engine :: Istio Tutorial Docs</title>
-    <link rel="canonical" href="https://redhat-developer-demos.github.io/istio-tutorial/istio-tutorial/1.0.0/index.html">
+    <title>Egress :: Istio Tutorial Docs</title>
+    <link rel="canonical" href="https://redhat-developer-demos.github.io/istio-tutorial/istio-tutorial/1.0.0/08_egress.html">
     <meta name="generator" content="Antora 1.1.1">
     <link rel="stylesheet" href="../../_/css/site.css">
 <link rel="icon" href="../../_/img/favicon.ico" type="image/x-icon">  </head>
@@ -53,7 +53,7 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
-  <li class="nav-item is-current-page" data-depth="1">
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="index.html">Introduction to Istio Tutorial</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -230,15 +230,15 @@
   </li>
 </ul>
   </li>
-  <li class="nav-item" data-depth="1">
+  <li class="nav-item is-current-page" data-depth="1">
     <button class="nav-toggle"></button>
     <a class="nav-link" href="08_egress.html">8. Egress</a>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="08_egress.html#createrecommendationv3">Create Recommendation V3</a>
+    <a class="nav-link" href="#createrecommendationv3">Create Recommendation V3</a>
   </li>
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="08_egress.html#istioegress">Istio-ize Egress</a>
+    <a class="nav-link" href="#istioegress">Istio-ize Egress</a>
   </li>
 </ul>
   </li>
@@ -299,37 +299,155 @@
   <main class="main">
 <div class="toolbar" role="navigation">
   <button class="navigation-toggle"></button>
-  <a href="index.html" class="home-link is-current"></a>
+  <a href="index.html" class="home-link"></a>
 <nav class="crumbs" aria-label="breadcrumbs">
   <ul>
     <li class="crumb"><a href="index.html">Istio Tutorial</a></li>
-    <li class="crumb"><a href="index.html">Introduction to Istio Tutorial</a></li>
+    <li class="crumb"><a href="08_egress.html">8. Egress</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="https://github.com/Abdennebi/istio-tutorial/edit/master/documentation/modules/ROOT/pages/index.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="https://github.com/Abdennebi/istio-tutorial/edit/master/documentation/modules/ROOT/pages/08_egress.adoc">Edit this Page</a></div>
 </div>
 <article class="doc">
-<h1>Istio on Google Kubernetes Engine</h1>
-<div class="ulist">
-<ul>
-<li>
-<p>A HTML version of this file is published at <a href="https://abdennebi.github.io/istio-tutorial/" class="bare">https://abdennebi.github.io/istio-tutorial/</a></p>
-</li>
-<li>
-<p>The source code is available at <a href="https://github.com/abdennebi/istio-tutorial" class="bare">https://github.com/abdennebi/istio-tutorial</a></p>
-</li>
-</ul>
+<h1>Egress</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Let&#8217;s see an example of using egress route by deploying a recommendation:v3 version. Egress service entry allow you to apply rules to how internal services interact with external services.</p>
 </div>
 <div class="paragraph">
-<p>There are three different and super simple microservices in this system and they are chained together in the following sequence:</p>
+<p>In this case, we are going to configure Istio to access <a href="http://now.httpbin.org" class="bare">http://now.httpbin.org</a> from internal service (recommendation:v3).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="createrecommendationv3"><a class="anchor" href="#createrecommendationv3"></a>Create recommendation:v3</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We can experiment with Egress service entry by making two changes to <code>RecommendationVerticle.java</code> like the following and creating a "v3" docker image.</p>
+</div>
+<div class="paragraph">
+<p>First change is updating the response string to:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code>customer → preference → recommendation</code></pre>
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">private static final String RESPONSE_STRING_FORMAT = "recommendation v3 from '%s': %d\n";</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>For now, they have a simple exception handling solution for dealing with a missing dependent service: it just returns the error message to the end-user.</p>
+<p>The second change is to change the default output to make a call to <a href="http://now.httpbin.org" class="bare">http://now.httpbin.org</a>.</p>
+</div>
+<div class="paragraph">
+<p>From:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">        router.get("/").handler(this::getRecommendations);
+//        router.get("/").handler(this::getNow);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">//        router.get("/").handler(this::getRecommendations);
+        router.get("/").handler(this::getNow);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><em>Important:</em> We have a 3rd Deployment to manage the v3 version of recommendation.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/kubernetes/recommendation-v3.yml</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_wait_for_v3_to_be_deployed"><a class="anchor" href="#_wait_for_v3_to_be_deployed"></a>Wait for v3 to be deployed</h3>
+<div class="paragraph">
+<p>Wait for those pods to show "2/2", the istio-proxy/envoy sidecar is part of that pod</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">NAME                                  READY     STATUS    RESTARTS   AGE
+customer-3600192384-fpljb             2/2       Running   0          17m
+preference-243057078-8c5hz            2/2       Running   0          15m
+recommendation-v1-60483540-9snd9      2/2       Running   0          12m
+recommendation-v2-2815683430-vpx4p    2/2       Running   0          15s
+recommendation-v3-7b445dd469-j6rkg    2/2       Running   0          2m</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="istioegress"><a class="anchor" href="#istioegress"></a>Istio-ize Egress</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Be sure you do not have any previous destination rule nor virtual service installed.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s redirect all traffic to reccomendation:v3.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/egress/recommendation-destination-rule--v1-v2-v3.yml
+kubectl apply -f manifests/istio/egress/recommendation-v3-virtual-service.yml</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then access to the service:</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Since no Egress service entry has been registered to access an external site, the timeout error is thrown after 5 seconds of trying to access to the site.
+.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">$ curl -m 5 $CUSTOMER_URL
+curl: (28) Operation timed out after 5000 milliseconds with 0 bytes received</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s fix it by registering a service entry to allow access to <code>httpbin</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/egress/httpbin-service-entry-egress.yml
+kubectl get serviceentry
+curl $CUSTOMER_URL
+customer =&gt; preference =&gt; Mon, 16 Jul 2018 12:03:38 GMT recommendation v3 from '7b445dd469-j6rkg': 1</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>or shell into the pod by getting its name and then using that name with oc exec</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl exec -it $(kubectl get pods -o jsonpath="{.items[*].metadata.name}" -l app=recommendation,version=v3) -c recommendation -- curl http://now.httpbin.org</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_clean_up"><a class="anchor" href="#_clean_up"></a>Clean up</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete ServiceEntry httpbin-egress-rule
+kubectl delete DestinationRule recommendation
+kubectl delete VirtualService recommendation</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </article>
   </main>
