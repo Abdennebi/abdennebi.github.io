@@ -306,7 +306,7 @@
     <li class="crumb"><a href="05_advanced-routerules.html">5. Advanced Routing</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="https://github.com/Abdennebi/istio-tutorial/edit/master/documentation/modules/ROOT/pages/05_advanced-routerules.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="https://github.com/Sfeir/kubernetes-istio-workshop/edit/master/documentation/modules/ROOT/pages/05_advanced-routerules.adoc">Edit this Page</a></div>
 </div>
 <article class="doc">
 <h1>Advanced Route Rules</h1>
@@ -409,55 +409,6 @@ curl -A "Mozilla/5.0 (iPhone; U; CPU iPhone OS 4(KHTML, like Gecko) Version/5.0.
 kubectl delete -f manifests/istio/routing-simple/recommendation-virtual-service-v1.yml</code></pre>
 </div>
 </div>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="mirroringtraffic"><a class="anchor" href="#mirroringtraffic"></a>Mirroring Traffic (Dark Launch)</h2>
-<div class="sectionbody">
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get pods -l app=recommendation</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>You should have 2 pods for recommendation based on the steps above</p>
-</div>
-<div class="paragraph">
-<p>You should have NO virtualservice nor destinationrule (in <code>tutorial</code> namespace) if so run:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl get virtualservice recommendation
-kubectl get destinationrule recommendation</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>In a new terminal, check the logs of recommendation-v2</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl logs -f `kubectl get pods|grep recommendation-v2|awk '{ print $1 }'` -c recommendation</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>and see what happens when you run</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl apply -f manifests/istio/routing-simple/recommendation-destination-rule-v1-v2.yml
-kubectl apply -f manifests/istio/routing-advanced/dark-launch/recommendation-v1-mirror-v2-virtual-service.yml
-curl $CUSTOMER_URL</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Clean up</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete -f -f manifests/istio/routing-simple/recommendation-destination-rule-v1-v2.yml
-kubectl delete -f manifests/istio/routing-advanced/dark-launch/recommendation-v1-mirror-v2-virtual-service.yml</code></pre>
 </div>
 </div>
 </div>
